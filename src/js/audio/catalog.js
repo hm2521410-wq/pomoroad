@@ -11,7 +11,10 @@ export const CATEGORIES = [
   { id: 'custom', label: 'マイサウンド' },
 ];
 
-// bed: ループ素材（beds.js）, events: ときどき鳴る単発音（oneshots.js）, live: その場で発音
+// bed: 一定の音のループ（beds.js）, stream: ゆっくり移り変わる流れ（streams.js）,
+// asset: 収録済みの音（assets/ 以下）, events: ときどき鳴る単発音（oneshots.js）, live: その場で発音
+// events の visitors：鳥が「やって来て、同じ場所でしばらく鳴いて、去る」
+// events の steady：仕掛けの音（ししおどし）なので、頻度を移り変わらせない
 // gain: dB（素材ごとの聞こえ方の差をそろえる）, reverb: 響きの種類と量
 export const SOUNDS = [
   { id: 'white', cat: 'noise', name: 'ホワイトノイズ', icon: '🌫️', bed: 'white', gain: -9, desc: '全部の高さが同じ強さのザーッという音' },
@@ -22,44 +25,45 @@ export const SOUNDS = [
   { id: 'fan', cat: 'noise', name: '扇風機', icon: '🪭', bed: 'fan', gain: -4 },
   { id: 'airplane', cat: 'noise', name: '飛行機の機内', icon: '✈️', bed: 'airplane', gain: -2 },
 
-  { id: 'rain-light', cat: 'rain', name: '小雨', icon: '🌦️', bed: 'rainLight', gain: 2 },
-  { id: 'rain-heavy', cat: 'rain', name: '本降りの雨', icon: '🌧️', bed: 'rainHeavy', gain: -3 },
-  { id: 'rain-window', cat: 'rain', name: '窓に当たる雨', icon: '🪟', bed: 'rainWindow', gain: 0 },
-  { id: 'rain-roof', cat: 'rain', name: '屋根の雨', icon: '🏠', bed: 'rainRoof', gain: -1 },
-  { id: 'thunder', cat: 'rain', name: '遠雷', icon: '⛈️', bed: 'thunderBed', gain: 0, events: [{ name: 'thunder', every: [20, 60], gain: -2 }], reverb: { type: 'outdoor', wet: 0.5 } },
+  { id: 'rain-light', cat: 'rain', name: '小雨', icon: '🌦️', stream: 'rain-light', gain: 2, desc: '雨の強さや音の近さが、数分かけてゆっくり変わります' },
+  { id: 'rain-heavy', cat: 'rain', name: '本降りの雨', icon: '🌧️', stream: 'rain-heavy', gain: -3, desc: 'ときどき強まったり、少し弱まったりします' },
+  { id: 'rain-window', cat: 'rain', name: '窓に当たる雨', icon: '🪟', stream: 'rain-window', gain: 0, desc: '風に乗って、雨が窓に当たる強さが変わります' },
+  { id: 'rain-roof', cat: 'rain', name: '屋根の雨', icon: '🏠', stream: 'rain-roof', gain: -1 },
+  { id: 'thunder', cat: 'rain', name: '遠雷', icon: '⛈️', stream: 'rain-distant', gain: 0, events: [{ name: 'thunder', every: [20, 60], gain: -2, period: 240 }], reverb: { type: 'outdoor', wet: 0.5 } },
 
-  { id: 'stream', cat: 'water', name: '川のせせらぎ', icon: '🏞️', bed: 'stream', gain: -1 },
-  { id: 'river', cat: 'water', name: '渓流', icon: '🌊', bed: 'river', gain: -3 },
-  { id: 'waterfall', cat: 'water', name: '滝', icon: '💧', bed: 'waterfall', gain: -4 },
-  { id: 'waves', cat: 'water', name: '波の音', icon: '🐚', bed: 'waves', gain: -1 },
-  { id: 'shishi', cat: 'water', name: 'ししおどし', icon: '🎋', bed: 'trickle', gain: 0, events: [{ name: 'shishi', every: [14, 30], gain: -6 }], reverb: { type: 'garden', wet: 0.45 } },
+  { id: 'stream', cat: 'water', name: '川のせせらぎ', icon: '🏞️', stream: 'stream', gain: -1 },
+  { id: 'river', cat: 'water', name: '渓流', icon: '🌊', stream: 'river', gain: -3 },
+  { id: 'waterfall', cat: 'water', name: '滝', icon: '💧', stream: 'waterfall', gain: -4 },
+  { id: 'waves', cat: 'water', name: '波の音', icon: '🐚', stream: 'waves', gain: -1, desc: '海の荒れ具合がゆっくり変わります' },
+  { id: 'shishi', cat: 'water', name: 'ししおどし', icon: '🎋', stream: 'trickle', gain: 0, events: [{ name: 'shishi', every: [14, 30], gain: -6, steady: true }], reverb: { type: 'garden', wet: 0.45 } },
 
-  { id: 'wind', cat: 'nature', name: '風', icon: '🌬️', bed: 'wind', gain: -3 },
-  { id: 'leaves', cat: 'nature', name: '木々のざわめき', icon: '🌳', bed: 'leaves', gain: -1 },
-  { id: 'forest', cat: 'nature', name: '森の小鳥', icon: '🐦', bed: 'forestBed', gain: 0, events: [{ name: 'bird', every: [0.8, 4.5], gain: -10 }], reverb: { type: 'forest', wet: 0.35 } },
+  { id: 'wind', cat: 'nature', name: '風', icon: '🌬️', stream: 'wind', gain: -3 },
+  { id: 'leaves', cat: 'nature', name: '木々のざわめき', icon: '🌳', stream: 'leaves', gain: -1 },
+  { id: 'forest', cat: 'nature', name: '森の小鳥', icon: '🐦', stream: 'forest', gain: 0, events: [{ name: 'bird', gain: -10, visitors: { count: [1, 4], stay: [40, 160], repeat: [2.5, 9], gap: [3, 30] } }], reverb: { type: 'forest', wet: 0.35 } },
   {
-    id: 'mountain', cat: 'nature', name: '山の朝', icon: '⛰️', bed: 'mountainBed', gain: 0,
+    id: 'mountain', cat: 'nature', name: '山の朝', icon: '⛰️', stream: 'mountain', gain: 0,
     events: [
-      { name: 'uguisu', every: [9, 24], gain: -9 },
-      { name: 'cuckoo', every: [30, 70], gain: -12 },
-      { name: 'bird', every: [3, 9], gain: -16 },
+      { name: 'uguisu', gain: -9, visitors: { count: [0, 2], stay: [60, 240], repeat: [7, 18], gap: [15, 90] } },
+      { name: 'cuckoo', gain: -12, visitors: { count: [0, 1], stay: [60, 200], repeat: [25, 60], gap: [60, 240] } },
+      { name: 'bird', gain: -16, visitors: { count: [0, 3], stay: [30, 120], repeat: [3, 10], gap: [10, 40] } },
     ],
     reverb: { type: 'valley', wet: 0.45 },
     desc: 'ウグイスとカッコウ、山の風と遠くの沢',
   },
-  { id: 'crickets', cat: 'nature', name: '秋の虫', icon: '🦗', bed: 'crickets', gain: -3, reverb: { type: 'forest', wet: 0.25 }, desc: 'スズムシとコオロギ' },
-  { id: 'frogs', cat: 'nature', name: '田んぼのカエル', icon: '🐸', bed: 'frogs', gain: -3, reverb: { type: 'forest', wet: 0.2 } },
-  { id: 'higurashi', cat: 'nature', name: 'ヒグラシ', icon: '🌇', bed: 'breeze', gain: 0, events: [{ name: 'higurashi', every: [10, 30], gain: -10 }], reverb: { type: 'forest', wet: 0.45 } },
-  { id: 'fire', cat: 'nature', name: '焚き火', icon: '🔥', bed: 'fire', gain: -1 },
-  { id: 'furin', cat: 'nature', name: '風鈴', icon: '🎐', bed: 'breeze', gain: -4, events: [{ name: 'furin', every: [3, 12], gain: -10 }], reverb: { type: 'garden', wet: 0.3 } },
+  { id: 'crickets', cat: 'nature', name: '秋の虫', icon: '🦗', stream: 'crickets', gain: -3, reverb: { type: 'forest', wet: 0.25 }, desc: 'スズムシとコオロギ' },
+  { id: 'frogs', cat: 'nature', name: '田んぼのカエル', icon: '🐸', stream: 'frogs', gain: -3, reverb: { type: 'forest', wet: 0.2 } },
+  { id: 'higurashi', cat: 'nature', name: 'ヒグラシ', icon: '🌇', stream: 'breeze', gain: 0, events: [{ name: 'higurashi', every: [10, 30], gain: -10 }], reverb: { type: 'forest', wet: 0.45 } },
+  { id: 'fire', cat: 'nature', name: '焚き火', icon: '🔥', stream: 'fire', gain: -1 },
+  { id: 'furin', cat: 'nature', name: '風鈴', icon: '🎐', stream: 'breeze', gain: -4, events: [{ name: 'furin', every: [3, 12], gain: -10, period: 90 }], reverb: { type: 'garden', wet: 0.3 } },
 
   {
-    id: 'cafe', cat: 'place', name: '喫茶店', icon: '☕', bed: 'cafe', gain: -1,
+    id: 'cafe', cat: 'place', name: '喫茶店', icon: '☕', asset: 'sounds/cafe-voices.ogg', stream: 'cafe-clatter', gain: -3,
+    desc: 'まわりの席の話し声（聞き取れない程度）と食器の音。にぎやかさが少しずつ変わります',
     events: [
       { name: 'steam', every: [70, 160], gain: -10 },
       { name: 'doorbell', every: [90, 220], gain: -14 },
     ],
-    reverb: { type: 'room', wet: 0.3 },
+    reverb: { type: 'room', wet: 0.15 },
   },
   {
     id: 'library', cat: 'place', name: '図書館', icon: '📚', bed: 'libraryBed', gain: -6,
@@ -75,8 +79,8 @@ export const SOUNDS = [
   { id: 'train', cat: 'place', name: '電車', icon: '🚃', bed: 'train', gain: -3, desc: 'ガタンゴトン…と走る車内' },
 
   { id: 'clock', cat: 'work', name: '時計の音', icon: '🕰️', bed: 'clock', gain: -8, reverb: { type: 'room', wet: 0.2 } },
-  { id: 'keyboard', cat: 'work', name: 'タイピング', icon: '⌨️', bed: 'keyboard', gain: -6, reverb: { type: 'room', wet: 0.15 } },
-  { id: 'pencil', cat: 'work', name: '鉛筆で書く音', icon: '✏️', bed: 'pencil', gain: -5, reverb: { type: 'room', wet: 0.15 } },
+  { id: 'keyboard', cat: 'work', name: 'タイピング', icon: '⌨️', stream: 'keyboard', gain: -6, reverb: { type: 'room', wet: 0.15 } },
+  { id: 'pencil', cat: 'work', name: '鉛筆で書く音', icon: '✏️', stream: 'pencil', gain: -5, reverb: { type: 'room', wet: 0.15 } },
   { id: 'vinyl', cat: 'work', name: 'レコードのノイズ', icon: '📀', bed: 'vinyl', gain: 2 },
 
   { id: 'ambient', cat: 'tone', name: 'アンビエント', icon: '🎹', bed: 'ambient', gain: -4, reverb: { type: 'hall', wet: 0.5 }, desc: 'ゆっくり移り変わる柔らかい和音' },

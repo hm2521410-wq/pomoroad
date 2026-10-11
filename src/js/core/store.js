@@ -102,6 +102,7 @@ export const DEFAULTS = {
     master: 60,
     link: 'focus', // manual | focus | separate
     fadeSec: 3,
+    variation: 1, // 音の移り変わり：0 一定 / 0.5 ひかえめ / 1 ふつう / 1.6 大きめ
     pauseWithTimer: true,
     mixes: {
       focus: { 'rain-window': 0.55, cafe: 0.5 },

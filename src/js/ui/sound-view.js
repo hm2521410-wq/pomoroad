@@ -74,9 +74,14 @@ export function renderSounds(body, app) {
   body.append(
     h('div', { class: 'section' },
       h('h3', null, '細かい設定'),
+      row(
+        '音の移り変わり',
+        segmented(s.variation, [[0, '一定'], [0.5, 'ひかえめ'], [1, 'ふつう'], [1.6, '大きめ']], (v) => app.set('sound.variation', Number(v))),
+        { hint: '雨の強さ・風・川の流れ・鳥の多さなどが、数分かけてゆっくり変わる大きさ。「一定」にするとほぼ変わりません' },
+      ),
       row('切り替えのフェード', stepper(s.fadeSec, (v) => app.set('sound.fadeSec', v), { min: 0, max: 15, unit: '秒' })),
       row('タイマーを一時停止したら音も止める', switchCtl(s.pauseWithTimer, (v) => app.set('sound.pauseWithTimer', v))),
-      h('p', { class: 'hint', style: { marginTop: '10px' } }, 'すべての音はアプリの中で合成しているので、同じ音がくり返し聞こえにくく、ネットにつながっていなくても使えます。'),
+      h('p', { class: 'hint', style: { marginTop: '10px' } }, '雨や自然の音はアプリの中で続きを作り続けているので、同じところのくり返しになりません。ネットにつながっていなくても使えます。喫茶店の話し声は、音声合成（Open JTalk・声：Mei）で作った会話を重ねたものです。'),
     ),
   );
 }

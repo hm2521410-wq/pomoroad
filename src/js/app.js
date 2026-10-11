@@ -31,6 +31,7 @@ class App {
     });
     this.sound = new SoundEngine();
     this.sound.masterVol = this.settings.sound.master / 100;
+    this.sound.variation = this.settings.sound.variation;
     this.sound.setCustomList(this.data.customSounds);
     this.alerts = new AlertSounds();
     this.soundOverride = null;
@@ -547,6 +548,7 @@ class App {
     this.saveSettings.flush();
     this.engine.applySettings();
     this.sound.setMaster(this.settings.sound.master / 100);
+    this.sound.setVariation(this.settings.sound.variation);
     this.applyView();
     this.syncSound();
     this.renderAll();
@@ -575,6 +577,7 @@ class App {
       this.renderAll();
     } else if (root === 'sound') {
       if (path === 'sound.master') this.sound.setMaster(this.settings.sound.master / 100);
+      if (path === 'sound.variation') this.sound.setVariation(this.settings.sound.variation);
       this.syncSound();
     } else if (root === 'mini') {
       this._sendState(true);

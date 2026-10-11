@@ -59,7 +59,12 @@
 - **シーン**：雨の喫茶店・静かな図書館・山の朝・海辺・森林浴・夏の夜・秋の夜長・嵐の夜・冬の山小屋・日本庭園・夜行列車・自習室・Lo-fi 勉強部屋・深い集中。自分の組み合わせも保存できる
 - タイマーとの連動：**連動しない／集中中だけ鳴らす／集中と休憩で別の音**。切り替えはフェード
 - 手元の音声ファイル（mp3・wav など）を追加して混ぜられる
-- すべてアプリの中で合成しているので、**同じ音がくり返し聞こえにくく、オフラインでも使え、著作権の心配もない**
+- **雨や自然の音は、ループではなく続きを作り続けている**ので、同じところのくり返しになりません。
+  雨の強さ・音の近さ・「ザー」と「ぽつぽつ」の割合、風の強さ、川の流れ、海の荒れ具合などが**数分かけてゆっくり移り変わります**
+  （変わり方の大きさは「一定／ひかえめ／ふつう／大きめ」から選べる）
+- 鳥は「やって来て、同じ場所でしばらく鳴いて、去っていく」ように鳴き、雷・虫・カエルなども、にぎやかな時間と静かな時間が交互に来ます
+- 喫茶店の話し声は、日本語の音声合成で作った会話を何十人分も重ねたもの（言葉は聞き取れない程度）。長い録音の中をランダムに飛びながら再生するので、くり返しが目立ちません
+- オフラインで使えます（ノイズ・雨・自然の音はアプリの中で合成、話し声はアプリに同梱）
 
 ![環境音](docs/images/sounds.jpg)
 
@@ -154,10 +159,23 @@ npm start
 electron/        Windows アプリの部分（ウィンドウ・トレイ・ミニ表示・ショートカット）
 src/             画面（ブラウザでもそのまま動く）
   js/core/       タイマー本体・並び・記録・設定の保存
-  js/audio/      環境音の合成（beds.js：ループする音, oneshots.js：鳥や雷などの単発音・通知音）
+  js/audio/      環境音（streams.js：移り変わる雨・自然の音, beds.js：一定の音, oneshots.js：鳥や雷などの単発音・通知音）
+  assets/sounds/ 喫茶店の話し声
   js/ui/         画面の部品
 tests/           タイマーのテスト
 docs/ideas.md    集めたアイデアと、次に足せそうなもの
 ```
 
-環境音を足したいときは、`src/js/audio/beds.js` に合成のしかたを書いて、`src/js/audio/catalog.js` の一覧に 1 行足します。
+環境音を足したいときは、移り変わる音なら `src/js/audio/streams.js`、一定の音なら `src/js/audio/beds.js` に合成のしかたを書いて、`src/js/audio/catalog.js` の一覧に 1 行足します。
+新しいストリームの音量は `node scripts/calibrate-streams.mjs` で測って `norm` に書きます。
+
+喫茶店の話し声（`src/assets/sounds/cafe-voices.ogg`）は `scripts/make-cafe-voices.py` で作り直せます（pyopenjtalk・numpy・scipy が必要）。
+
+---
+
+## クレジット
+
+- 喫茶店の話し声：音声合成エンジン [Open JTalk](https://open-jtalk.sourceforge.net/)（修正 BSD ライセンス）、
+  HTS Voice「Mei」（© 2009-2013 Nagoya Institute of Technology, Department of Computer Science / MMDAgent Project Team、
+  [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)）で作った音声を加工・合成
+- そのほかの音（ノイズ・雨・自然・生活音・通知音）は、すべてこのアプリのプログラムで合成しています

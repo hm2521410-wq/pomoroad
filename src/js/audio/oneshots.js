@@ -16,6 +16,7 @@ import {
   noiseGrain,
   modal,
   bubble,
+  mulberry32,
 } from './dsp-core.js';
 import { writeStrokes, writeTyping, clink } from './beds.js';
 
@@ -98,33 +99,40 @@ const BIRD_SONGS = {
 
 export const EVENTS = {};
 
-EVENTS.bird = (sr, r) => {
-  const kind = pick(r, ['chirps', 'chirps', 'trill', 'tsutsupi', 'warble', 'hiyodori']);
+export const BIRD_KINDS = ['chirps', 'trill', 'tsutsupi', 'warble', 'hiyodori'];
+
+/** o.seed を渡すと同じ鳥（同じ節回し）になる。o.pan・o.far で場所も固定できる */
+EVENTS.bird = (sr, r, o = {}) => {
+  const rs = o.seed != null ? mulberry32(o.seed) : r;
+  const kind = o.kind ?? pick(rs, ['chirps', 'chirps', 'trill', 'tsutsupi', 'warble', 'hiyodori']);
   const out = new Float32Array(Math.round(sr * 2.4));
-  BIRD_SONGS[kind](out, sr, r);
-  const far = r() < 0.5;
+  BIRD_SONGS[kind](out, sr, rs);
+  const far = o.far ?? r() < 0.5;
   if (far) lowpassInPlace(out, sr, 3000);
-  return { data: normPeak(out, far ? rand(r, 0.25, 0.5) : rand(r, 0.5, 0.9)), pan: rand(r, -0.9, 0.9) };
+  return { data: normPeak(out, (far ? rand(r, 0.25, 0.5) : rand(r, 0.5, 0.9)) * (o.level ?? 1)), pan: o.pan ?? rand(r, -0.9, 0.9) };
 };
 
-EVENTS.uguisu = (sr, r) => {
-  // ウグイス「ホーーホケキョ」
+EVENTS.uguisu = (sr, r, o = {}) => {
+  // ウグイス「ホーーホケキョ」。同じ鳥は同じ高さで鳴く
   const out = new Float32Array(Math.round(sr * 2.6));
-  const base = rand(r, 1050, 1250);
+  const rs = o.seed != null ? mulberry32(o.seed) : r;
+  const base = rand(rs, 1050, 1250);
   const hoo = rand(r, 1.1, 1.6);
   note(out, sr, 0.02, hoo, (x) => base * (1 + 0.08 * x) * (1 + 0.004 * Math.sin(TAU * 6 * x * hoo)), 0.75, { attack: 0.25, release: 0.08, harm: 0.12 });
   const t = 0.02 + hoo + 0.1;
   note(out, sr, t, 0.07, () => base * 2.0, 0.7, { attack: 0.005 });
   note(out, sr, t + 0.1, 0.07, (x) => base * (3.0 - 0.6 * x), 0.8, { attack: 0.003 });
   note(out, sr, t + 0.21, 0.26, (x) => base * (x < 0.4 ? 1.9 + 3.6 * x : 3.35 - 1.0 * (x - 0.4)), 1, { attack: 0.004, release: 0.06, harm: 0.1 });
-  return { data: normPeak(out, rand(r, 0.5, 0.85)), pan: rand(r, -0.7, 0.7) };
+  if (o.far) lowpassInPlace(out, sr, 2600);
+  return { data: normPeak(out, rand(r, 0.5, 0.85) * (o.far ? 0.55 : 1)), pan: o.pan ?? rand(r, -0.7, 0.7) };
 };
 
-EVENTS.cuckoo = (sr, r) => {
+EVENTS.cuckoo = (sr, r, o = {}) => {
   // カッコウ「カッコー」を数回
   const reps = 3 + ((r() * 6) | 0);
   const out = new Float32Array(Math.round(sr * (reps * 0.95 + 0.6)));
-  const f1 = rand(r, 640, 700);
+  const rs = o.seed != null ? mulberry32(o.seed) : r;
+  const f1 = rand(rs, 640, 700);
   const f2 = f1 * 0.8;
   for (let k = 0; k < reps; k++) {
     const t = 0.02 + k * rand(r, 0.85, 1.0);
@@ -132,7 +140,7 @@ EVENTS.cuckoo = (sr, r) => {
     note(out, sr, t + 0.27, 0.32, (x) => f2 * (1 - 0.04 * x), 0.9, { attack: 0.03, release: 0.12, harm: 0.2 });
   }
   lowpassInPlace(out, sr, 2500);
-  return { data: normPeak(out, rand(r, 0.3, 0.55)), pan: rand(r, -0.8, 0.8) };
+  return { data: normPeak(out, rand(r, 0.3, 0.55)), pan: o.pan ?? rand(r, -0.8, 0.8) };
 };
 
 EVENTS.higurashi = (sr, r) => {
@@ -448,8 +456,8 @@ export function renderTick(name, sr, r, alt = false) {
 }
 
 /** 単発イベントを作る。戻り値は {L, R}（ステレオ） */
-export function renderEvent(name, sr, r) {
-  const ev = EVENTS[name](sr, r);
+export function renderEvent(name, sr, r, opts = {}) {
+  const ev = EVENTS[name](sr, r, opts);
   if (ev.L) return ev;
   const [gl, gr] = panGains(ev.pan ?? 0);
   const L = new Float32Array(ev.data.length);

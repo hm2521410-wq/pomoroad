@@ -421,6 +421,13 @@ function dataTab(body, s, set, app) {
       h('p', { class: 'hint', style: { marginTop: '10px' } }, 'CSV は Excel でそのまま開けます（日付・時刻・種類・分・タスク）。'),
     ),
     section(
+      'クレジット',
+      h('p', { class: 'hint' },
+        '喫茶店の話し声は、音声合成エンジン Open JTalk（修正 BSD ライセンス）と、HTS Voice「Mei」（© Nagoya Institute of Technology、',
+        h('a', { href: 'https://creativecommons.org/licenses/by/3.0/', target: '_blank', rel: 'noopener' }, 'CC BY 3.0'),
+        '）で作った会話を重ねたものです。そのほかの音はすべてこのアプリの中で合成しています。'),
+    ),
+    section(
       'リセット',
       h('div', { class: 'btn-row' },
         h('button', { class: 'btn', onclick: async () => { if (await confirmDialog({ title: '設定を初期状態に戻しますか？', message: '記録とタスクは残ります。', ok: '戻す', danger: true })) { app.replaceSettings(structuredClone(DEFAULTS)); toast('設定を初期状態に戻しました'); } } }, '設定を初期状態に戻す'),
