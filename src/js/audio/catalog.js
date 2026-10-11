@@ -66,7 +66,8 @@ export const SOUNDS = [
     reverb: { type: 'room', wet: 0.15 },
   },
   {
-    id: 'library', cat: 'place', name: '図書館', icon: '📚', bed: 'libraryBed', gain: -6,
+    id: 'library', cat: 'place', name: '図書館', icon: '📚', bed: 'libraryBed', asset: 'sounds/library-people.ogg', assetGain: -2, gain: -6,
+    desc: 'ページをめくる音・鉛筆・足音に、近くの席のひそひそ話や遠くのカウンターの声が少しだけ',
     events: [
       { name: 'page', every: [6, 20], gain: -8 },
       { name: 'pencil', every: [8, 25], gain: -10 },

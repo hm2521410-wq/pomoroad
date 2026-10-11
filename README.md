@@ -9,14 +9,22 @@
 
 ## ダウンロードとインストール（Windows）
 
-1. このリポジトリの **Actions** タブ →「**Build Windows app**」→ 一番上の実行（緑のチェック）を開く
-2. ページ下の **Artifacts** にある `Pomoroad-Windows` をダウンロードして、zip を展開
-3. どちらかを実行
-   - `Pomoroad-Setup-1.0.0.exe` … インストール版（スタートメニューとデスクトップにショートカットができます）
-   - `Pomoroad-1.0.0-portable.exe` … インストール不要。どこに置いても動きます
+1. このリポジトリの **[Releases](https://github.com/hm2521410-wq/pomoroad/releases/latest)** を開く
+2. どちらかをダウンロードして実行
+   - `Pomoroad-Setup-（番号）.exe` … インストール版（スタートメニューとデスクトップにショートカットができます）
+   - `Pomoroad-（番号）-portable.exe` … インストール不要。どこに置いても動きます
 
 > 署名をしていないので、初回は「Windows によって PC が保護されました」と出ます。
 > 「**詳細情報**」→「**実行**」で起動できます。
+>
+> Releases にまだ無い最新の変更は、**Actions** タブ →「Build Windows app」→ 一番上の実行 → **Artifacts** の `Pomoroad-Windows` から取り出せます。
+
+### アップデートのしかた
+
+1. トレイの Pomoroad のアイコンを右クリック →「終了」
+2. 新しい `Pomoroad-Setup-（番号）.exe` を実行（上書きで更新されます）
+
+記録・タスク・設定はそのまま残ります。アプリの「設定 → データ → 新しいバージョンを確認する」からも Releases のページを開けます。
 
 ---
 
@@ -51,7 +59,7 @@
 | 雨 | 小雨、本降りの雨、窓に当たる雨、屋根の雨、遠雷 |
 | 水辺 | 川のせせらぎ、渓流、滝、波の音、ししおどし |
 | 自然 | 風、木々のざわめき、森の小鳥、山の朝（ウグイス・カッコウ）、秋の虫、田んぼのカエル、ヒグラシ、焚き火、風鈴 |
-| 場所 | 喫茶店、図書館（ページをめくる音・鉛筆・足音）、電車 |
+| 場所 | 喫茶店、図書館（ページをめくる音・鉛筆・足音・ひそひそ話・遠くのカウンターの声）、電車 |
 | 作業音 | 時計の音、タイピング、鉛筆で書く音、レコードのノイズ |
 | トーン | アンビエント（やわらかい和音）、バイノーラル α 波・β 波・γ 波 |
 
@@ -160,7 +168,7 @@ electron/        Windows アプリの部分（ウィンドウ・トレイ・ミ�
 src/             画面（ブラウザでもそのまま動く）
   js/core/       タイマー本体・並び・記録・設定の保存
   js/audio/      環境音（streams.js：移り変わる雨・自然の音, beds.js：一定の音, oneshots.js：鳥や雷などの単発音・通知音）
-  assets/sounds/ 喫茶店の話し声
+  assets/sounds/ 喫茶店の話し声・図書館のひそひそ話
   js/ui/         画面の部品
 tests/           タイマーのテスト
 docs/ideas.md    集めたアイデアと、次に足せそうなもの
@@ -169,13 +177,13 @@ docs/ideas.md    集めたアイデアと、次に足せそうなもの
 環境音を足したいときは、移り変わる音なら `src/js/audio/streams.js`、一定の音なら `src/js/audio/beds.js` に合成のしかたを書いて、`src/js/audio/catalog.js` の一覧に 1 行足します。
 新しいストリームの音量は `node scripts/calibrate-streams.mjs` で測って `norm` に書きます。
 
-喫茶店の話し声（`src/assets/sounds/cafe-voices.ogg`）は `scripts/make-cafe-voices.py` で作り直せます（pyopenjtalk・numpy・scipy が必要）。
+喫茶店の話し声（`src/assets/sounds/cafe-voices.ogg`）は `scripts/make-cafe-voices.py`、図書館の人の気配（`library-people.ogg`）は `scripts/make-library-people.py` で作り直せます（pyopenjtalk・numpy・scipy が必要）。
 
 ---
 
 ## クレジット
 
-- 喫茶店の話し声：音声合成エンジン [Open JTalk](https://open-jtalk.sourceforge.net/)（修正 BSD ライセンス）、
+- 喫茶店の話し声・図書館のひそひそ話：音声合成エンジン [Open JTalk](https://open-jtalk.sourceforge.net/)（修正 BSD ライセンス）、
   HTS Voice「Mei」（© 2009-2013 Nagoya Institute of Technology, Department of Computer Science / MMDAgent Project Team、
   [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)）で作った音声を加工・合成
 - そのほかの音（ノイズ・雨・自然・生活音・通知音）は、すべてこのアプリのプログラムで合成しています

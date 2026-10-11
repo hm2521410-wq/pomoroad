@@ -1,7 +1,7 @@
 {
   "name": "pomoroad",
   "productName": "Pomoroad",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "カスタム性の高いポモドーロタイマー（Windows向け・環境音つき）",
   "main": "electron/main.js",
   "author": "HM",

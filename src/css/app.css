@@ -1726,3 +1726,6 @@ body.focus-mode #fs-clock {
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+a.btn {
+  text-decoration: none;
+}

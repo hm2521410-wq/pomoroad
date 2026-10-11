@@ -389,6 +389,8 @@ function download(name, text, type) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
+const RELEASES_URL = 'https://github.com/hm2521410-wq/pomoroad/releases/latest';
+
 function dataTab(body, s, set, app) {
   const file = h('input', { type: 'file', accept: 'application/json,.json', style: { display: 'none' } });
   file.addEventListener('change', async () => {
@@ -408,7 +410,17 @@ function dataTab(body, s, set, app) {
   });
   const stamp = new Date().toISOString().slice(0, 10);
   const t = app.data.totals();
+  const ver = h('b', null, '…');
+  if (app.desktop) app.desktop.version().then((v) => (ver.textContent = v)).catch(() => (ver.textContent = '不明'));
+  else ver.textContent = 'ブラウザ版';
   body.append(
+    section(
+      'バージョンと更新',
+      h('p', { class: 'hint' }, 'いまのバージョン：', ver),
+      h('div', { class: 'btn-row' }, h('a', { class: 'btn primary', href: RELEASES_URL, target: '_blank', rel: 'noopener' }, icon('download', 15), '新しいバージョンを確認する')),
+      h('p', { class: 'hint', style: { marginTop: '10px' } },
+        'GitHub のリリースのページが開きます。新しい「Pomoroad-Setup-（番号）.exe」をダウンロードして実行すると、上書きで更新されます。記録・タスク・設定はそのまま残ります（トレイの Pomoroad を「終了」してから実行すると確実です）。'),
+    ),
     section(
       'これまでの記録',
       h('p', { class: 'hint' }, `合計 ${fmtDuration(t.focusMs)}・ポモドーロ ${t.pomos} 回・記録 ${app.data.records.length} 件`),
@@ -425,7 +437,7 @@ function dataTab(body, s, set, app) {
       h('p', { class: 'hint' },
         '喫茶店の話し声は、音声合成エンジン Open JTalk（修正 BSD ライセンス）と、HTS Voice「Mei」（© Nagoya Institute of Technology、',
         h('a', { href: 'https://creativecommons.org/licenses/by/3.0/', target: '_blank', rel: 'noopener' }, 'CC BY 3.0'),
-        '）で作った会話を重ねたものです。そのほかの音はすべてこのアプリの中で合成しています。'),
+        '）で作った会話を重ねたものです（図書館のひそひそ話も同じ方法で作っています）。そのほかの音はすべてこのアプリの中で合成しています。'),
     ),
     section(
       'リセット',

@@ -141,16 +141,13 @@ class ShufflePlayer {
     }
     this.lastOffset = off;
     // 区切りごとに少しだけ店のにぎやかさを変える
-    const level = 1 + (Math.random() - 0.5) * 0.4 * this.e.variation;
+    const level = (1 + (Math.random() - 0.5) * 0.4 * this.e.variation) * dbToGain(this.ch.def.assetGain ?? 0);
     const src = ctx.createBufferSource();
     src.buffer = this.buf;
     const g = ctx.createGain();
     src.connect(g).connect(this.ch.gain);
-    if (first) g.gain.setValueAtTime(level, start);
-    else {
-      g.gain.setValueAtTime(0, start);
-      g.gain.setValueCurveAtTime(fadeCurve(true, level), start, XF);
-    }
+    g.gain.setValueAtTime(0, start);
+    g.gain.setValueCurveAtTime(fadeCurve(true, level), start, first ? 2 : XF);
     g.gain.setValueCurveAtTime(fadeCurve(false, level), start + dur - XF, XF);
     src.start(start, off, dur);
     this.sources.add(src);
@@ -495,10 +492,14 @@ export class SoundEngine extends Emitter {
         ch.ready = true;
       }
       if (def.asset) {
-        const abuf = await this._asset(def.asset);
-        if (!ch.alive) return;
-        ch.shuffle = new ShufflePlayer(this, ch, abuf);
-        ch.shuffle.pump();
+        // 収録済みの音は読み込み（デコード）に数秒かかることがあるので、ほかの音を待たせない
+        this._asset(def.asset)
+          .then((abuf) => {
+            if (!ch.alive) return;
+            ch.shuffle = new ShufflePlayer(this, ch, abuf);
+            ch.shuffle.pump();
+          })
+          .catch((err) => this._failed(ch, err));
       }
       if (def.stream) {
         ch.stream = new StreamPlayer(this, ch, def.stream);
