@@ -1,0 +1,59 @@
+# スマホ用の声かけ音声を VOICEVOX で作って、docs/phone-voices にコミットする
+# scripts/make-phone-voices.mjs（セリフや声）を変えて push すると作り直す
+name: Phone voices
+
+on:
+  push:
+    paths:
+      - scripts/make-phone-voices.mjs
+      - .github/workflows/phone-voices.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  voices:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Start VOICEVOX engine
+        run: |
+          docker run -d --name voicevox -p 50021:50021 voicevox/voicevox_engine:cpu-latest
+          for i in $(seq 1 90); do
+            if curl -sf http://127.0.0.1:50021/version; then echo; break; fi
+            sleep 2
+          done
+          curl -sf http://127.0.0.1:50021/version
+
+      - name: Make voices
+        run: node scripts/make-phone-voices.mjs docs/phone-voices
+
+      - name: Convert to mp3 (and a sample of all lines per voice)
+        run: |
+          sudo apt-get install -y ffmpeg > /dev/null
+          for d in docs/phone-voices/*/; do
+            list=""
+            for w in "$d"*.wav; do
+              ffmpeg -loglevel error -y -i "$w" -af "loudnorm=I=-16:TP=-1.5" -ar 44100 -b:a 96k "${w%.wav}.mp3"
+              list="$list -i ${w%.wav}.mp3"
+            done
+            n=$(ls "$d"*.wav | wc -l)
+            ffmpeg -loglevel error -y $list -filter_complex "concat=n=$n:v=0:a=1" -b:a 96k "${d}sample.mp3"
+            rm -f "$d"*.wav
+          done
+          ls -la docs/phone-voices/*
+
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/phone-voices
+          if git diff --cached --quiet; then echo "変更なし"; exit 0; fi
+          git commit -m "スマホ用の声かけ音声を作り直す（VOICEVOX）"
+          git push
