@@ -69,6 +69,9 @@ const phone = new PhoneLink({
   onMessage: (m) => mainWin?.webContents.send('phone:message', m),
   onStatus: (st) => mainWin?.webContents.send('phone:status', st),
 });
+// 自動アップデート（インストール版だけ。起動のあとと 4 時間ごとに確かめ、見つけたら裏でダウンロード）
+let updater = null;
+let updateState = { state: 'unsupported', current: '', version: '', percent: 0, error: '' };
 let phoneFocus = false; // スマホに「集中開始」を送ったまま「集中終了」を送っていない
 let phoneQuitSent = false;
 
@@ -433,6 +436,53 @@ function registerIpc() {
     app.quit();
   });
   ipcMain.handle('version', () => app.getVersion());
+  ipcMain.handle('update:state', () => updateState);
+  ipcMain.handle('update:check', async () => {
+    if (!updater) return updateState;
+    await updater.checkForUpdates().catch(() => {});
+    return updateState;
+  });
+  ipcMain.on('update:install', () => {
+    if (updateState.state !== 'ready' || !updater) return;
+    quitting = true;
+    // 何も聞かずに入れて、終わったら Pomoroad を起動し直す
+    updater.quitAndInstall(true, true);
+  });
+}
+
+function setupUpdater() {
+  updateState.current = app.getVersion();
+  const portable = !!process.env.PORTABLE_EXECUTABLE_DIR;
+  if (!app.isPackaged || process.platform !== 'win32' || portable) {
+    updateState.state = portable ? 'portable' : 'unsupported';
+    return;
+  }
+  try {
+    ({ autoUpdater: updater } = require('electron-updater'));
+  } catch (err) {
+    updateState = { ...updateState, state: 'error', error: err.message };
+    return;
+  }
+  updater.autoDownload = true;
+  updater.autoInstallOnAppQuit = true; // 「再起動して更新」を押さなくても、次に終了したときに入る
+  updater.logger = null;
+  const send = (st) => {
+    updateState = { ...updateState, ...st };
+    mainWin?.webContents.send('update', updateState);
+  };
+  updater.on('checking-for-update', () => send({ state: 'checking', error: '' }));
+  updater.on('update-available', (i) => send({ state: 'downloading', version: i.version, percent: 0 }));
+  updater.on('download-progress', (p) => send({ state: 'downloading', percent: Math.round(p.percent) }));
+  updater.on('update-not-available', () => send({ state: 'latest' }));
+  updater.on('update-downloaded', (i) => send({ state: 'ready', version: i.version }));
+  updater.on('error', (err) => {
+    const msg = String(err?.message ?? err).split('\n')[0];
+    send({ state: 'error', error: /404|Not Found|authentication|private/i.test(msg) ? 'リリースを見に行けませんでした（GitHub のリポジトリが非公開のままかもしれません）' : msg.slice(0, 160) });
+  });
+  updateState.state = 'idle';
+  const check = () => updater.checkForUpdates().catch(() => {});
+  setTimeout(check, 10_000);
+  setInterval(check, 4 * 3600_000);
 }
 
 function registerShortcuts(map) {
@@ -471,6 +521,7 @@ if (!app.requestSingleInstanceLock()) {
     registerIpc();
     createMain();
     createTray();
+    setupUpdater();
     for (const ev of ['lock-screen', 'unlock-screen', 'suspend', 'resume']) {
       powerMonitor.on(ev, () => mainWin?.webContents.send('power', ev));
     }

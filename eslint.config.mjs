@@ -18,7 +18,7 @@ export default [
   },
   {
     files: ['electron/**/*.js'],
-    languageOptions: { ecmaVersion: 2024, sourceType: 'commonjs', globals: { require: 'readonly', __dirname: 'readonly', process: 'readonly', console: 'readonly', setTimeout: 'readonly', clearTimeout: 'readonly', URL: 'readonly', Response: 'readonly', URLSearchParams: 'readonly', AbortController: 'readonly', TextDecoder: 'readonly' } },
+    languageOptions: { ecmaVersion: 2024, sourceType: 'commonjs', globals: { require: 'readonly', __dirname: 'readonly', process: 'readonly', console: 'readonly', setTimeout: 'readonly', clearTimeout: 'readonly', URL: 'readonly', Response: 'readonly', setInterval: 'readonly', URLSearchParams: 'readonly', AbortController: 'readonly', TextDecoder: 'readonly' } },
     rules: { 'no-undef': 'error', 'no-unused-vars': ['warn', { args: 'none' }] },
   },
 ];

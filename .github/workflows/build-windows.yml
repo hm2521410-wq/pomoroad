@@ -4,6 +4,7 @@
 #   そのバージョン（例: v1.1.0）でタグを作って Releases に載せる（同じバージョンのリリースがあれば何もしない）
 # - Actions の画面の「Run workflow」や、v で始まるタグの push でも載せられる
 # - リリースの説明は docs/release-notes/v（バージョン）.md があればそれを使う
+# - リリースには自動アップデート用の latest.yml も載せる（リポジトリが公開なら、アプリが起動時に見つけて裏でダウンロードする）
 name: Build Windows app
 
 on:
@@ -78,4 +79,9 @@ jobs:
           target_commitish: ${{ github.sha }}
           name: Pomoroad ${{ steps.rel.outputs.version }}
           body_path: ${{ steps.rel.outputs.notes }}
-          files: dist/*.exe
+          # latest.yml と .blockmap は、アプリの自動アップデートが新しい版を見つけるのに使う
+          files: |
+            dist/*.exe
+            dist/latest.yml
+            dist/*.blockmap
+          fail_on_unmatched_files: true

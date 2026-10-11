@@ -393,6 +393,40 @@ function download(name, text, type) {
 
 const RELEASES_URL = 'https://github.com/hm2521410-wq/pomoroad/releases/latest';
 
+const UPDATE_TEXT = {
+  unsupported: 'この起動方法（開発用）では自動で更新しません',
+  portable: 'ポータブル版は自動で更新できません。インストール版（Pomoroad-Setup）を使うと、自動で更新されるようになります',
+  idle: '起動して少したつと、新しいバージョンがないかを確かめます',
+  checking: '新しいバージョンを確かめています…',
+  latest: '最新のバージョンです',
+};
+
+/** 自動アップデートの状態とボタン。状態が変わると描き直す */
+function updateBox(app) {
+  const box = h('div');
+  const draw = () => {
+    clear(box);
+    const st = app.updateState ?? { state: app.desktop ? 'unsupported' : 'web' };
+    let text;
+    if (st.state === 'downloading') text = `新しいバージョン ${st.version} をダウンロードしています（${st.percent || 0}%）。終わったらお知らせします`;
+    else if (st.state === 'ready') text = `新しいバージョン ${st.version} の準備ができました。「再起動して更新」を押すか、次に Pomoroad を終了したときに入ります`;
+    else if (st.state === 'error') text = `確かめられませんでした：${st.error}`;
+    else if (st.state === 'web') text = 'ブラウザ版はページを開き直すと新しくなります';
+    else text = UPDATE_TEXT[st.state] ?? '';
+    box.append(h('p', { class: ['hint', st.state === 'error' && 'warn'] }, text));
+    const btns = h('div', { class: 'btn-row' });
+    if (st.state === 'ready') btns.append(h('button', { class: 'btn primary', onclick: () => app.installUpdate() }, icon('download', 15), '再起動して更新'));
+    if (['idle', 'latest', 'error'].includes(st.state)) btns.append(h('button', { class: 'btn', onclick: () => { app.desktop.update.check(); } }, icon('repeat', 15), '今すぐ確かめる'));
+    btns.append(h('a', { class: 'btn', href: RELEASES_URL, target: '_blank', rel: 'noopener' }, icon('open', 15), 'リリースのページ'));
+    box.append(btns);
+  };
+  draw();
+  app.onUpdateChange = () => {
+    if (box.isConnected) draw();
+  };
+  return box;
+}
+
 function dataTab(body, s, set, app) {
   const file = h('input', { type: 'file', accept: 'application/json,.json', style: { display: 'none' } });
   file.addEventListener('change', async () => {
@@ -416,13 +450,7 @@ function dataTab(body, s, set, app) {
   if (app.desktop) app.desktop.version().then((v) => (ver.textContent = v)).catch(() => (ver.textContent = '不明'));
   else ver.textContent = 'ブラウザ版';
   body.append(
-    section(
-      'バージョンと更新',
-      h('p', { class: 'hint' }, 'いまのバージョン：', ver),
-      h('div', { class: 'btn-row' }, h('a', { class: 'btn primary', href: RELEASES_URL, target: '_blank', rel: 'noopener' }, icon('download', 15), '新しいバージョンを確認する')),
-      h('p', { class: 'hint', style: { marginTop: '10px' } },
-        'GitHub のリリースのページが開きます。新しい「Pomoroad-Setup-（番号）.exe」をダウンロードして実行すると、上書きで更新されます。記録・タスク・設定はそのまま残ります（トレイの Pomoroad を「終了」してから実行すると確実です）。'),
-    ),
+    section('バージョンと更新', h('p', { class: 'hint' }, 'いまのバージョン：', ver), updateBox(app)),
     section(
       'これまでの記録',
       h('p', { class: 'hint' }, `合計 ${fmtDuration(t.focusMs)}・ポモドーロ ${t.pomos} 回・記録 ${app.data.records.length} 件`),

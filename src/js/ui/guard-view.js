@@ -312,6 +312,31 @@ const copy = (text) =>
 
 const copyable = (text) => h('div', { class: 'copy-box' }, h('code', null, text), h('button', { class: 'btn', onclick: () => copy(text) }, 'コピー'));
 
+/** つながりを順に確かめるボタン（① パソコン ↔ 中継サービス、② パソコン → スマホ） */
+function checkBox(ctl) {
+  const c = ctl.lastCheck;
+  let result = null;
+  if (c?.kind === 'self') {
+    result = {
+      ok: 'パソコン側は正常です（中継サービスに送れて、受け取れました）。あとはスマホ側の設定です',
+      send: '中継サービスに送れませんでした。インターネットにつながっているか、「詳しい設定」の中継サーバーを確かめてください',
+      receive: '送れましたが、受け取れませんでした。少し待ってからもう一度試してください',
+    }[c.result];
+  } else if (c?.kind === 'phone') {
+    result = c.ok ? 'スマホの ntfy アプリに送りました。通知が出なければ、ntfy アプリにトピック名を登録しているか（手順 6）を確かめてください' : '送れませんでした。インターネットとトピック名を確かめてください';
+  }
+  const busy = h('span');
+  return h('div', { class: 'phone-check' },
+    h('div', { class: 'btn-row' },
+      h('button', { class: 'btn', onclick: async (e) => { e.currentTarget.disabled = true; busy.textContent = '確かめています…（15 秒ほど）'; await ctl.selfCheck(); } }, icon('check', 15), '① パソコン側を確かめる'),
+      h('button', { class: 'btn', onclick: () => ctl.test() }, icon('phone', 15), '② スマホの ntfy アプリに送る'),
+      busy,
+    ),
+    h('small', null, '② は、スマホの ntfy アプリでトピック名を登録している（手順 6）ときだけ通知が出ます。「かんたん」の手順だけなら、スマホには何も出ないのがふつうです。'),
+    result ? h('p', { class: ['phone-result', c.kind === 'self' && c.result !== 'ok' && 'warn', c.kind === 'phone' && !c.ok && 'warn'] }, `${fmtTime(c.at)}　${result}`) : null,
+  );
+}
+
 const STATUS_TEXT = { off: '止まっています', connecting: 'つないでいます…', connected: 'つながっています', error: 'つながっていません' };
 
 function phoneSection(app, rerender) {
@@ -330,9 +355,7 @@ function phoneSection(app, rerender) {
       h('p', { class: ['phone-status', `s-${st.state}`] }, h('span', { class: 'dot' }), STATUS_TEXT[st.state] ?? st.state, st.error ? `（${st.error}）` : ''),
       row('集中の始まりと終わりをスマホに知らせる', switchCtl(p.sendFocus, (v) => set('sendFocus', v)), { hint: 'スマホをおやすみモードにするのに使います（手順の「しっかり」）' }),
       row('スマホでアプリを開いたら、パソコンでも声をかける', switchCtl(p.nudge, (v) => set('nudge', v)), { hint: 'オフでも回数は記録します' }),
-      h('div', { class: 'btn-row' },
-        h('button', { class: 'btn', onclick: async () => toast((await ctl.test()) ? 'スマホにテストを送りました' : '送れませんでした。インターネットとトピック名を確かめてください') }, icon('phone', 15), 'スマホにテストを送る'),
-      ),
+      checkBox(ctl),
     );
     const recv = ctl.received;
     box.append(
@@ -340,7 +363,8 @@ function phoneSection(app, rerender) {
         h('small', null, 'スマホから届いた知らせ'),
         recv.length
           ? recv.map((r) => h('div', { class: 'pr-row' }, h('span', null, fmtTime(r.at)), h('b', null, r.app), h('small', null, r.counted ? '集中中なので記録しました' : '集中中ではないので数えていません')))
-          : h('div', { class: 'pr-row' }, h('small', null, 'まだ届いていません。下の手順のマクロを作ったら、スマホでそのアプリを開いて確かめてください')),
+          : h('div', { class: 'pr-row' }, h('small', null, 'まだ届いていません')),
+        h('small', null, 'スマホで、MacroDroid に登録したアプリを開くと、ここに出ます（集中中でなくても出ます。数えるのは集中中だけ）。出ないときは、MacroDroid の HTTP リクエストの URL（最後が -pc/publish?message=…）と、方式が GET かを確かめてください。'),
       ),
     );
     box.append(setupGuide(app));

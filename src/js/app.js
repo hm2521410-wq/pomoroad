@@ -19,6 +19,8 @@ import { renderSettings, SETTINGS_TABS } from './ui/settings-view.js';
 import { renderSounds } from './ui/sound-view.js';
 import { renderStats } from './ui/stats-view.js';
 import { GuardController } from './focus-guard.js';
+import { nextDrawer } from './ui/drawer-state.js';
+import { soundPlan } from './core/sound-plan.js';
 import { PhoneController } from './phone-link.js';
 
 class App {
@@ -142,6 +144,7 @@ class App {
     const e = this.engine;
     e.on('change', () => {
       this.phone.sync();
+      if (this.updateState?.state === 'ready') this._maybeUpdateToast();
       this.saveState();
       this.renderAll();
       this.syncSound();
@@ -590,6 +593,11 @@ class App {
     } else if (root === 'sound') {
       if (path === 'sound.master') this.sound.setMaster(this.settings.sound.master / 100);
       if (path === 'sound.variation') this.sound.setVariation(this.settings.sound.variation);
+      if (path === 'sound.link') {
+        // 鳴らすタイミングを変えたら、それまでの手動の再生・停止や試し聞きは引きずらない
+        this.soundOverride = null;
+        this.previewMix = null;
+      }
       this.syncSound();
     } else if (root === 'mini') {
       this._sendState(true);
@@ -643,11 +651,12 @@ class App {
   }
 
   // ── 環境音 ─────────────────────────────────────
+  _soundPlan() {
+    return soundPlan({ ...this._soundPlanInput(), preview: this.previewMix ? { key: this.previewMix } : null });
+  }
+
   currentMixKey() {
-    const s = this.settings.sound;
-    if (this.previewMix) return this.previewMix;
-    if (s.link !== 'separate') return 'focus';
-    return this.engine.step.type === 'focus' ? 'focus' : 'break';
+    return this._soundPlan().mixKey;
   }
 
   currentMix() {
@@ -656,16 +665,8 @@ class App {
 
   syncSound() {
     const s = this.settings.sound;
-    const st = this.engine.st;
-    const type = this.engine.step.type;
-    const running = st.status === 'running';
-    const pausedMid = st.status === 'paused';
-    let should;
-    if (s.link === 'manual') should = this.manualPlaying;
-    else if (s.link === 'focus') should = type === 'focus' && (running || (pausedMid && !s.pauseWithTimer));
-    else should = running || (pausedMid && !s.pauseWithTimer);
-    if (this.soundOverride !== null) should = this.soundOverride;
-    const mix = this.currentMix();
+    const { play: should, mixKey } = this._soundPlan();
+    const mix = s.mixes[mixKey] ?? {};
     const key = JSON.stringify(mix);
     if (key !== this._mixKey) {
       this._mixKey = key;
@@ -680,6 +681,11 @@ class App {
   }
 
   toggleSoundPlayback() {
+    // 試し聞き中に押されたら、試し聞きをやめてタイマーどおりに戻す
+    if (this.previewMix) {
+      this._endPreview();
+      return;
+    }
     const next = !this.sound.playing;
     if (this.settings.sound.link === 'manual') this.manualPlaying = next;
     else this.soundOverride = next;
@@ -689,24 +695,53 @@ class App {
     this.syncSound();
   }
 
-  /** ミックスを変える。autoplay なら止まっていても鳴らして試聴できるようにする */
-  setMix(key, mix, autoplay = false) {
+  /**
+   * ミックスを変える。preview なら、パネルを開いている間だけそのミックスを鳴らして試し聞きできるようにする
+   * （パネルを閉じるとタイマーどおりに戻る）
+   */
+  setMix(key, mix, preview = false) {
     this.settings.sound.mixes[key] = mix;
     this.saveSettings();
-    if (this.settings.sound.link === 'separate' && key !== this.currentMixKey()) this.previewMix = key;
-    if (autoplay && !this.sound.playing) {
-      if (this.settings.sound.link === 'manual') this.manualPlaying = true;
-      else this.soundOverride = true;
+    if (preview && this.drawer === 'sounds') {
+      const plan = soundPlan({ ...this._soundPlanInput(), preview: null });
+      // タイマーどおりでもこのミックスが鳴っているなら、試し聞きにしない
+      if (!(plan.play && plan.mixKey === key)) this.previewMix = key;
     }
     this.syncSound();
   }
 
+  _soundPlanInput() {
+    const s = this.settings.sound;
+    return { link: s.link, type: this.engine.step.type, status: this.engine.st.status, pauseWithTimer: s.pauseWithTimer, manualPlaying: this.manualPlaying, override: this.soundOverride };
+  }
+
+  /** 試し聞きをやめて、タイマーどおりの鳴らし方に戻す */
+  _endPreview() {
+    if (!this.previewMix) return;
+    this.previewMix = null;
+    this.syncSound();
+    if (this.drawer === 'sounds') this.renderDrawer();
+  }
+
   // ── ドロワー ───────────────────────────────────
   openDrawer(kind, tab = null) {
+    this._moveDrawer({ type: 'tool', kind, tab });
+  }
+
+  /** パネルの中のタブを切り替える（閉じない） */
+  selectTab(tab) {
+    this._moveDrawer({ type: 'tab', tab });
+    $('#drawer-body').scrollTop = 0;
+  }
+
+  _moveDrawer(action) {
     closeMenu();
-    if (this.drawer === kind && (!tab || tab === this.drawerTab)) return this.closeDrawer();
+    const next = nextDrawer({ drawer: this.drawer, tab: this.drawerTab }, action);
+    if (!next.drawer) return this.closeDrawer();
+    const kind = next.drawer;
+    if (this.drawer === 'sounds' && kind !== 'sounds') this._endPreview();
     this.drawer = kind;
-    this.drawerTab = tab ?? this.drawerTab ?? 'timer';
+    this.drawerTab = next.tab;
     if (kind === 'settings') {
       this.settings.ui.lastTab = this.drawerTab;
       this.saveSettings();
@@ -719,8 +754,10 @@ class App {
   }
 
   closeDrawer() {
+    const wasSounds = this.drawer === 'sounds';
     this.drawer = null;
     this.guard.preview = false;
+    if (wasSounds) this._endPreview();
     document.body.classList.remove('drawer-open');
     for (const b of document.querySelectorAll('.tool')) b.classList.remove('active');
   }
@@ -743,7 +780,7 @@ class App {
       title.textContent = this.drawerTab === 'timer' ? 'タイマーのモード' : '設定';
       tabs.style.display = '';
       for (const [id, label, ic] of SETTINGS_TABS) {
-        tabs.append(h('button', { class: ['tab', id === this.drawerTab && 'active'], onclick: () => { this.drawerTab = id; this.settings.ui.lastTab = id; this.saveSettings(); this.openDrawer('settings', id); } }, icon(ic, 15), label));
+        tabs.append(h('button', { class: ['tab', id === this.drawerTab && 'active'], onclick: () => this.selectTab(id) }, icon(ic, 15), label));
       }
       renderSettings(body, this.drawerTab, this);
     }
@@ -963,6 +1000,33 @@ class App {
       }
     }, 15000);
     this._pushDesktopSettings();
+    // 自動アップデート
+    if (d.update) {
+      d.update.state().then((st) => this._onUpdate(st));
+      d.update.onState((st) => this._onUpdate(st));
+    }
+  }
+
+  _onUpdate(st) {
+    this.updateState = st;
+    this.onUpdateChange?.();
+    if (st.state === 'ready' && this._updateToastFor !== st.version) this._maybeUpdateToast();
+  }
+
+  /** 準備ができた更新を知らせる（集中中はじゃましないよう、集中が終わってから） */
+  _maybeUpdateToast() {
+    const st = this.updateState;
+    if (st?.state !== 'ready' || this._updateToastFor === st.version) return;
+    if (this.engine.running && this.engine.step.type === 'focus') return;
+    this._updateToastFor = st.version;
+    toast(`新しいバージョン ${st.version} の準備ができました`, { action: '再起動して更新', onAction: () => this.installUpdate(), timeout: 60000 });
+  }
+
+  installUpdate() {
+    this.saveState.flush();
+    this.saveSettings.flush();
+    this.data.flush();
+    this.desktop?.update?.install();
   }
 
   async _pushDesktopSettings({ shortcuts = true } = {}) {

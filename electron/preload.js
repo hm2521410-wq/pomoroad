@@ -49,4 +49,11 @@ contextBridge.exposeInMainWorld('desktop', {
   showMain: () => ipcRenderer.send('showMain'),
   quit: () => ipcRenderer.send('quit'),
   version: () => ipcRenderer.invoke('version'),
+  // 自動アップデート
+  update: {
+    state: () => ipcRenderer.invoke('update:state'),
+    check: () => ipcRenderer.invoke('update:check'),
+    install: () => ipcRenderer.send('update:install'),
+    onState: (cb) => on('update', cb),
+  },
 });

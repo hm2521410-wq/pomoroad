@@ -27,12 +27,36 @@ export function renderSounds(body, app) {
   );
   body.append(top);
 
+  // 試し聞き中の知らせ
+  if (app.previewMix) {
+    body.append(
+      h('div', { class: 'preview-bar' },
+        icon('volume', 16),
+        h('span', null, `試し聞き中：${app.previewMix === 'break' ? '休憩の音' : '集中の音'}（パネルを閉じるとタイマーどおりに戻ります）`),
+        h('button', { class: 'btn', onclick: () => app._endPreview() }, 'やめる')),
+    );
+  }
+
+  // いつ鳴らすか
+  const linked = s.link !== 'manual';
   body.append(
     h('div', { class: 'section' },
-      h('h3', null, 'タイマーとの連動'),
-      segmented(s.link, [['manual', '連動しない'], ['focus', '集中中だけ鳴らす'], ['separate', '集中と休憩で別の音']], (v) => { app.set('sound.link', v); rerender(); }),
+      h('h3', null, 'いつ鳴らすか'),
+      row('タイマーと連動する', switchCtl(linked, (v) => {
+        if (v) app.set('sound.link', s.lastLink && s.lastLink !== 'manual' ? s.lastLink : 'focus');
+        else {
+          app.set('sound.lastLink', s.link);
+          app.set('sound.link', 'manual');
+        }
+        rerender();
+      }), { hint: linked ? '集中を始めると自動で鳴り、終わると止まります' : '上の ▶ で、自分で鳴らす・止める' }),
+      linked
+        ? row('休憩中', segmented(s.link, [['focus', '鳴らさない'], ['same', '集中と同じ音'], ['separate', '休憩用の音']], (v) => { app.set('sound.link', v); rerender(); }))
+        : null,
       s.link === 'separate'
-        ? h('div', { style: { marginTop: '10px' } }, segmented(editing, [['focus', '集中用のミックスを編集'], ['break', '休憩用のミックスを編集']], (v) => { app.ui.mixTab = v; rerender(); }))
+        ? h('div', { style: { marginTop: '10px' } },
+          h('p', { class: 'hint' }, '下で選ぶのは：'),
+          segmented(editing, [['focus', '集中の音'], ['break', '休憩の音']], (v) => { app.ui.mixTab = v; rerender(); }))
         : null,
     ),
   );
@@ -87,9 +111,10 @@ export function renderSounds(body, app) {
 }
 
 function linkHint(link) {
-  if (link === 'focus') return '集中中だけ自動で鳴ります';
-  if (link === 'separate') return '集中と休憩でミックスを切り替えます';
-  return 'タイマーとは関係なく鳴らします';
+  if (link === 'focus') return '集中中だけ鳴らします（休憩中は鳴らしません）';
+  if (link === 'same') return '集中中も休憩中も同じ音を鳴らします';
+  if (link === 'separate') return '集中中と休憩中で音を切り替えます';
+  return 'タイマーとは関係なく、自分で鳴らす・止める';
 }
 
 function tile(snd, mix, editing, app, rerender) {

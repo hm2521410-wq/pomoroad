@@ -2094,3 +2094,56 @@ body.focus-mode #guard-card {
 .phone-adv .row {
   margin-top: 8px;
 }
+.preview-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(255, 184, 77, 0.14);
+  color: var(--text);
+  font-size: 12px;
+}
+.preview-bar span {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  line-height: 1.5;
+}
+.preview-bar svg {
+  flex: none;
+}
+.preview-bar .btn {
+  height: 28px;
+}
+.phone-check {
+  margin: 6px 0 4px;
+}
+.phone-check > small {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+  margin-top: 4px;
+}
+.phone-check .btn-row span {
+  font-size: 12px;
+  color: var(--muted);
+  align-self: center;
+}
+.phone-result {
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(51, 196, 141, 0.14);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.phone-result.warn {
+  background: rgba(255, 120, 90, 0.14);
+}
+.phone-recv > small:last-child {
+  line-height: 1.5;
+  margin-top: 4px;
+}

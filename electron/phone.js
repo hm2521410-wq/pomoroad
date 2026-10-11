@@ -85,14 +85,15 @@ class PhoneLink {
   }
 
   /** スマホへ送る（パソコン → スマホのトピック） */
-  async publish({ message, title = 'Pomoroad', priority = 2, tags = [] }) {
+  /** toPc を付けると、スマホ → パソコンのトピックに送る（パソコンだけでつながりを確かめるとき） */
+  async publish({ message, title = 'Pomoroad', priority = 2, tags = [], toPc = false }) {
     const { enabled, server, topic } = this.cfg;
     if (!enabled || !server || !TOPIC_RE.test(topic)) return false;
     try {
       const res = await this.fetch(`${server}/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic, message, title, priority, tags }),
+        body: JSON.stringify({ topic: toPc ? `${topic}-pc` : topic, message, title, priority, tags }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return true;

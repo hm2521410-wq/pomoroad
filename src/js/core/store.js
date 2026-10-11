@@ -100,7 +100,8 @@ export const DEFAULTS = {
   },
   sound: {
     master: 60,
-    link: 'focus', // manual | focus | separate
+    link: 'focus', // manual | focus（休憩中は鳴らさない）| same（休憩中も同じ音）| separate（休憩用の音）
+    lastLink: 'focus', // 「タイマーと連動する」を切る前の値
     fadeSec: 3,
     variation: 1, // 音の移り変わり：0 一定 / 0.5 ひかえめ / 1 ふつう / 1.6 大きめ
     pauseWithTimer: true,
