@@ -164,6 +164,12 @@ function createMain() {
       e.preventDefault();
       mainWin.hide();
       if (miniOpts.autoOnMinimize && lastState?.running) showMini(true);
+      if (!winState.trayHintShown && Notification.isSupported()) {
+        // 初めてしまったときだけ、終了していないことを知らせる
+        winState.trayHintShown = true;
+        saveWinState();
+        new Notification({ title: 'Pomoroad はタスクトレイで動いています', body: '右下のアイコンから開けます。終了するときはアイコンを右クリック →「終了」', icon: iconPath(), silent: true }).show();
+      }
     }
   });
   mainWin.on('closed', () => {
