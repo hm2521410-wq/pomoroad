@@ -2,9 +2,10 @@
 
 import { h, $, clear } from './dom.js';
 import { icon } from './icons.js';
-import { row, switchCtl, select, segmented, toast } from './widgets.js';
+import { row, switchCtl, select, segmented, toast, textInput, confirmDialog } from './widgets.js';
 import { DISTRACT_GROUPS, TONES, keywordChoices, screenOf, studyRatio } from '../core/guard.js';
-import { fmtDuration, addDays } from '../core/util.js';
+import { fmtDuration, fmtTime, addDays } from '../core/util.js';
+import { newTopic } from '../phone-link.js';
 
 const CLS_LABEL = { study: '勉強用', distract: '気が散る', neutral: 'どちらでもない', self: 'Pomoroad' };
 const CLS_OPTIONS = [
@@ -176,6 +177,7 @@ export function guardTab(body, s, set, app, rerender) {
 
   body.append(rulesSection(app, rerender));
   body.append(recentSection(app, rerender));
+  body.append(phoneSection(app, rerender));
 }
 
 /** いま（直前）の画面がどう分けられるか。設定を開いている間、2 秒ごとに更新 */
@@ -299,3 +301,93 @@ export function guardStats(app) {
     topList.length ? h('div', { class: 'guard-top' }, h('small', null, 'よく開いた気が散るもの（7日間）'), topList.map(([label, ms]) => h('div', { class: 'gt-row' }, h('span', null, label), h('span', { class: 'num' }, dur(ms))))) : null,
   );
 }
+
+// ── スマホ連携 ────────────────────────────────────────
+
+const copy = (text) =>
+  navigator.clipboard.writeText(text).then(
+    () => toast('コピーしました'),
+    () => toast('コピーできませんでした'),
+  );
+
+const copyable = (text) => h('div', { class: 'copy-box' }, h('code', null, text), h('button', { class: 'btn', onclick: () => copy(text) }, 'コピー'));
+
+const STATUS_TEXT = { off: '止まっています', connecting: 'つないでいます…', connected: 'つながっています', error: 'つながっていません' };
+
+function phoneSection(app, rerender) {
+  const p = app.settings.phone;
+  const ctl = app.phone;
+  const set = (k, v) => app.set(`phone.${k}`, v);
+  const box = h('div');
+  const intro = h('p', { class: 'hint' }, 'Android の MacroDroid と、無料の中継サービス ntfy を使います。スマホで気が散るアプリを開いたら、パソコンでも声をかけて記録します。集中中はスマホをおやすみモードにもできます。送るのは「集中開始・集中終了」と「開いたアプリの名前」だけです。');
+  if (!ctl.available) return section('スマホ（Android）', intro, h('p', { class: 'hint' }, 'Windows アプリで使えます。'));
+  const draw = () => {
+    clear(box);
+    box.append(row('スマホと連携する', switchCtl(p.enabled, (v) => { set('enabled', v); draw(); })));
+    if (!p.enabled) return;
+    const st = ctl.status ?? { state: 'off' };
+    box.append(
+      h('p', { class: ['phone-status', `s-${st.state}`] }, h('span', { class: 'dot' }), STATUS_TEXT[st.state] ?? st.state, st.error ? `（${st.error}）` : ''),
+      row('集中の始まりと終わりをスマホに知らせる', switchCtl(p.sendFocus, (v) => set('sendFocus', v)), { hint: 'スマホをおやすみモードにするのに使います（手順の「しっかり」）' }),
+      row('スマホでアプリを開いたら、パソコンでも声をかける', switchCtl(p.nudge, (v) => set('nudge', v)), { hint: 'オフでも回数は記録します' }),
+      h('div', { class: 'btn-row' },
+        h('button', { class: 'btn', onclick: async () => toast((await ctl.test()) ? 'スマホにテストを送りました' : '送れませんでした。インターネットとトピック名を確かめてください') }, icon('phone', 15), 'スマホにテストを送る'),
+      ),
+    );
+    const recv = ctl.received;
+    box.append(
+      h('div', { class: 'phone-recv' },
+        h('small', null, 'スマホから届いた知らせ'),
+        recv.length
+          ? recv.map((r) => h('div', { class: 'pr-row' }, h('span', null, fmtTime(r.at)), h('b', null, r.app), h('small', null, r.counted ? '集中中なので記録しました' : '集中中ではないので数えていません')))
+          : h('div', { class: 'pr-row' }, h('small', null, 'まだ届いていません。下の手順のマクロを作ったら、スマホでそのアプリを開いて確かめてください')),
+      ),
+    );
+    box.append(setupGuide(app));
+    box.append(
+      h('details', { class: 'phone-adv' },
+        h('summary', null, '詳しい設定'),
+        row('トピック名', h('div', { class: 'btn-row' }, h('button', { class: 'btn', onclick: async () => {
+          if (!(await confirmDialog({ title: 'トピック名を作り直しますか？', message: 'スマホの ntfy アプリと MacroDroid の URL も、新しいトピック名に直す必要があります。', ok: '作り直す' }))) return;
+          set('topic', newTopic());
+          draw();
+        } }, '作り直す')), { hint: 'トピック名を知っている人は知らせを読み書きできます。他の人に教えないでください' }),
+        row('中継サーバー', textInput(p.server, (v) => set('server', v.trim() || 'https://ntfy.sh'), { placeholder: 'https://ntfy.sh' }), { hint: 'ふつうは https://ntfy.sh のまま' }),
+      ),
+    );
+  };
+  draw();
+  ctl.onChange = () => {
+    if (box.isConnected) draw();
+  };
+  return section('スマホ（Android）', intro, box);
+}
+
+/** スマホ側の設定のしかた（トピック名と URL を入れて表示する） */
+function setupGuide(app) {
+  const p = app.settings.phone;
+  const server = (p.server || 'https://ntfy.sh').replace(/\/+$/, '');
+  const url = `${server}/${p.topic}-pc/publish?message=`;
+  const step = (n, ...children) => h('li', null, h('b', { class: 'step-n' }, n), h('div', null, ...children));
+  return h('details', { class: 'phone-guide' },
+    h('summary', null, 'スマホの設定のしかた'),
+    h('h4', null, 'かんたん：気が散るアプリを開いたら、パソコンに知らせる'),
+    h('ol', null,
+      step('1', 'スマホに ', h('b', null, 'MacroDroid'), ' を入れます（Polaris の家計取り込みで使っているもので大丈夫です）。'),
+      step('2', 'マクロを追加して、名前を「Pomoroad 気が散るアプリ」にします。'),
+      step('3', h('b', null, 'トリガー'), '：「アプリケーション」→「アプリの起動/終了」→「起動時」で、気が散るアプリ（YouTube・Instagram・X・TikTok・ゲームなど）を選びます。'),
+      step('4', h('b', null, 'アクション'), '：「Web 連携」→「HTTP リクエスト」。方式は ', h('b', null, 'GET'), '、URL に次を貼り付けます。', copyable(url),
+        h('small', null, 'URL の最後（message= のあと）に、入力欄の右の「…」→ マジックテキストから「アプリ名」に当たるもの（なければ「トリガー」）を入れると、どのアプリかがパソコンに出ます。入れなくても動きます。本文（ボディ）に入れた変数は置き換わらないことがあるので、URL に入れてください。')),
+      step('5', 'パソコンで集中しているときにそのアプリを開くと、Pomoroad が声をかけて記録します。集中中でないときは何もしません。'),
+    ),
+    h('h4', null, 'しっかり：集中中はスマホもおやすみモードにする'),
+    h('ol', null,
+      step('6', 'スマホに ', h('b', null, 'ntfy'), ' アプリを入れ、「＋」で次のトピック名を登録します（サーバーは ntfy.sh のまま）。', copyable(p.topic)),
+      step('7', 'MacroDroid でマクロ「Pomoroad 集中開始」を作ります。トリガー：「通知」→「通知を受信」、アプリは ntfy、文字に「集中開始」を含む。アクション：「おやすみモード」をオン、変数 pomoroad_focus をオン（true）。'),
+      step('8', 'マクロ「Pomoroad 集中終了」を作ります。トリガー：同じく「集中終了」を含む。アクション：「おやすみモード」をオフ、pomoroad_focus をオフ（false）。'),
+      step('9', '手順 2 のマクロに、制約「変数 pomoroad_focus がオン」を足し、HTTP リクエストのあとに「ホーム画面を表示」と「読み上げ：今は集中の時間です」を足します。'),
+    ),
+    h('p', { class: 'hint' }, '無料版の MacroDroid はマクロが 5 つまでです。足りないときは 7 と 8 を 1 つにまとめられます（トリガーを 2 つにして「もし〜なら」で分ける）。時計を見るためにスマホを点けるだけなら数えません。'),
+  );
+}
+

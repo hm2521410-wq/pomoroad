@@ -28,6 +28,14 @@ contextBridge.exposeInMainWorld('desktop', {
     status: () => ipcRenderer.invoke('fg:status'),
     stop: () => ipcRenderer.send('fg:stop'),
   },
+  // スマホ連携（ntfy）
+  phone: {
+    configure: (c) => ipcRenderer.send('phone:config', c),
+    publish: (m) => ipcRenderer.invoke('phone:publish', m),
+    status: () => ipcRenderer.invoke('phone:status'),
+    onMessage: (cb) => on('phone:message', cb),
+    onStatus: (cb) => on('phone:status', cb),
+  },
   setTray: (o) => ipcRenderer.send('tray', o),
   notify: (o) => ipcRenderer.send('notify', o),
   attention: (o) => ipcRenderer.send('attention', o),

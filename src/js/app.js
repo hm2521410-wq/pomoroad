@@ -19,6 +19,7 @@ import { renderSettings, SETTINGS_TABS } from './ui/settings-view.js';
 import { renderSounds } from './ui/sound-view.js';
 import { renderStats } from './ui/stats-view.js';
 import { GuardController } from './focus-guard.js';
+import { PhoneController } from './phone-link.js';
 
 class App {
   constructor() {
@@ -36,6 +37,7 @@ class App {
     this.sound.setCustomList(this.data.customSounds);
     this.alerts = new AlertSounds();
     this.guard = new GuardController(this);
+    this.phone = new PhoneController(this);
     this.soundOverride = null;
     this.manualPlaying = false;
     this.previewMix = null;
@@ -82,6 +84,7 @@ class App {
     });
     if (this.desktop) this._initDesktop();
     this.guard.start();
+    this.phone.start();
     setInterval(() => {
       this.side.renderToday();
       this.side.renderTimeline();
@@ -138,6 +141,7 @@ class App {
   _bindEngine() {
     const e = this.engine;
     e.on('change', () => {
+      this.phone.sync();
       this.saveState();
       this.renderAll();
       this.syncSound();
@@ -559,6 +563,7 @@ class App {
     this.applyView();
     this.syncSound();
     this.renderAll();
+    this.phone.apply();
     if (this.desktop) this._pushDesktopSettings();
     if (this.drawer) this.renderDrawer();
   }
@@ -589,6 +594,8 @@ class App {
     } else if (root === 'mini') {
       this._sendState(true);
       if (this.desktop) this._pushDesktopSettings({ shortcuts: false });
+    } else if (root === 'phone') {
+      this.phone.apply();
     } else if (root === 'globalKeys' || root === 'system') {
       if (this.desktop) this._pushDesktopSettings({ shortcuts: root === 'globalKeys' });
     }

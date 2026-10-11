@@ -16,10 +16,12 @@ const {
   screen,
   Notification,
   nativeTheme,
+  net,
 } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 const { ForegroundWatcher } = require('./watcher');
+const { PhoneLink } = require('./phone');
 
 const APP_ID = 'com.hm.pomoroad';
 const SRC = path.join(__dirname, '..', 'src');
@@ -61,6 +63,14 @@ let miniOpts = { layout: 'bar', scale: 1, opacity: 100, onTop: true, autoOnMinim
 let miniWanted = false;
 let miniFlashed = false;
 const watcher = new ForegroundWatcher();
+// スマホ連携（ntfy）。通信は Chromium の仕組み（net.fetch）を使うので、Windows のプロキシ設定にも従う
+const phone = new PhoneLink({
+  fetch: (url, opts) => net.fetch(url, opts),
+  onMessage: (m) => mainWin?.webContents.send('phone:message', m),
+  onStatus: (st) => mainWin?.webContents.send('phone:status', st),
+});
+let phoneFocus = false; // スマホに「集中開始」を送ったまま「集中終了」を送っていない
+let phoneQuitSent = false;
 
 // ── ウィンドウの位置の保存 ─────────────────────────
 const statePath = () => path.join(app.getPath('userData'), 'window-state.json');
@@ -408,6 +418,15 @@ function registerIpc() {
   });
   ipcMain.handle('fg:status', () => watcher.status());
   ipcMain.on('fg:stop', () => watcher.stop());
+  // スマホ連携
+  ipcMain.on('phone:config', (_e, c) => phone.configure(c ?? {}));
+  ipcMain.handle('phone:publish', async (_e, m) => {
+    const ok = await phone.publish(m ?? {});
+    if (ok && m?.kind === 'start') phoneFocus = true;
+    if (ok && m?.kind === 'end') phoneFocus = false;
+    return ok;
+  });
+  ipcMain.handle('phone:status', () => phone.status());
   ipcMain.on('showMain', showMain);
   ipcMain.on('quit', () => {
     quitting = true;
@@ -456,12 +475,20 @@ if (!app.requestSingleInstanceLock()) {
       powerMonitor.on(ev, () => mainWin?.webContents.send('power', ev));
     }
   });
-  app.on('before-quit', () => {
+  app.on('before-quit', (e) => {
     quitting = true;
+    // 集中中に終了したら、スマホのおやすみモードが残らないように「集中終了」を送ってから終わる
+    if (phoneFocus && !phoneQuitSent) {
+      phoneQuitSent = true;
+      e.preventDefault();
+      const done = () => app.quit();
+      Promise.race([phone.publish({ message: '集中終了（Pomoroad を終了しました）', tags: ['white_check_mark'] }), new Promise((r) => setTimeout(r, 2000))]).finally(done);
+    }
   });
   app.on('will-quit', () => {
     globalShortcut.unregisterAll();
     watcher.stop();
+    phone.stop();
   });
   app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit();

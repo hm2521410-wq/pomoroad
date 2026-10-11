@@ -63,6 +63,11 @@ export class GuardController {
       return;
     }
     if (this.busy || this.status?.unsupported) return;
+    if (active && !this.app.settings.ui.guardIntro) {
+      // 初めて見張るときに、見ているもの・変える場所を知らせる
+      this.app.set('ui.guardIntro', true);
+      toast('見守りが動いています。集中中だけ、前に出ているアプリの名前と画面の題名を見ます（画面の中身は見ません）', { action: '設定', onAction: () => this.app.openDrawer('settings', 'guard'), timeout: 10000 });
+    }
     this.busy = true;
     let s;
     try {
@@ -254,7 +259,9 @@ export class GuardController {
   // ── スマホ ────────────────────────────────────────
   /** スマホから「気が散るアプリを開いた」と届いた */
   onPhone({ app: name, at = Date.now() }) {
-    if (!this.active()) return false;
+    // パソコンの見張りを切っていても、スマホ連携は集中中なら働く
+    const e = this.app.engine;
+    if (!(e.running && e.step.type === 'focus')) return false;
     this.core.phone(at, name);
     this.app.engine.interruption();
     if (!this.app.settings.phone.nudge) return true;

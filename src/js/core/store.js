@@ -190,7 +190,7 @@ export const DEFAULTS = {
     sendFocus: true, // 集中の始まりと終わりをスマホに知らせる
     nudge: true, // スマホで気が散るアプリを開いたら、パソコンでも声をかける
   },
-  ui: { panelOpen: true, lastTab: 'timer', onboarded: false },
+  ui: { panelOpen: true, lastTab: 'timer', onboarded: false, guardIntro: false },
 };
 
 export function loadSettings() {

@@ -1980,3 +1980,117 @@ body.focus-mode #guard-card {
   padding: 3px 0;
   border-bottom: 1px solid var(--line);
 }
+.phone-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  margin: 4px 0 10px;
+  color: var(--text-2);
+}
+.phone-status .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+.phone-status.s-connected .dot {
+  background: #33c48d;
+  box-shadow: 0 0 6px #33c48d;
+}
+.phone-status.s-connecting .dot {
+  background: #ffb84d;
+}
+.phone-status.s-error .dot {
+  background: #ff7a5a;
+}
+.phone-recv {
+  margin: 12px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.phone-recv > small,
+.pr-row small {
+  color: var(--muted);
+  font-size: 11px;
+}
+.pr-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 13px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--line);
+}
+.phone-guide,
+.phone-adv {
+  margin-top: 12px;
+  background: var(--chip);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+.phone-guide summary,
+.phone-adv summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+}
+.phone-guide h4 {
+  font-size: 13px;
+  margin: 14px 0 6px;
+}
+.phone-guide ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.phone-guide li {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: 6px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.phone-guide li small {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+.step-n {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--chip-hover);
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  margin-top: 2px;
+}
+.copy-box {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin: 6px 0;
+}
+.copy-box code {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.25);
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+.copy-box .btn {
+  flex: none;
+  height: 30px;
+}
+.phone-adv .row {
+  margin-top: 8px;
+}

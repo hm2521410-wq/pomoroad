@@ -11,14 +11,14 @@ export default [
         cancelAnimationFrame: 'readonly', addEventListener: 'readonly', innerWidth: 'readonly', innerHeight: 'readonly', devicePixelRatio: 'readonly',
         matchMedia: 'readonly', AudioContext: 'readonly', Worker: 'readonly', self: 'readonly', URL: 'readonly', Blob: 'readonly', Node: 'readonly',
         SVGElement: 'readonly', Element: 'readonly', Notification: 'readonly', SpeechSynthesisUtterance: 'readonly', speechSynthesis: 'readonly',
-        structuredClone: 'readonly', fetch: 'readonly', console: 'readonly', performance: 'readonly', process: 'readonly', Buffer: 'readonly',
+        structuredClone: 'readonly', fetch: 'readonly', console: 'readonly', performance: 'readonly', process: 'readonly', Buffer: 'readonly', crypto: 'readonly',
       },
     },
     rules: { 'no-undef': 'error', 'no-unused-vars': ['warn', { args: 'none' }], 'no-unreachable': 'error', 'no-dupe-keys': 'error', 'no-const-assign': 'error' },
   },
   {
     files: ['electron/**/*.js'],
-    languageOptions: { ecmaVersion: 2024, sourceType: 'commonjs', globals: { require: 'readonly', __dirname: 'readonly', process: 'readonly', console: 'readonly', setTimeout: 'readonly', clearTimeout: 'readonly', URL: 'readonly', Response: 'readonly' } },
+    languageOptions: { ecmaVersion: 2024, sourceType: 'commonjs', globals: { require: 'readonly', __dirname: 'readonly', process: 'readonly', console: 'readonly', setTimeout: 'readonly', clearTimeout: 'readonly', URL: 'readonly', Response: 'readonly', URLSearchParams: 'readonly', AbortController: 'readonly', TextDecoder: 'readonly' } },
     rules: { 'no-undef': 'error', 'no-unused-vars': ['warn', { args: 'none' }] },
   },
 ];
