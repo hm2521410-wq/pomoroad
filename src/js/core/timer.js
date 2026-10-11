@@ -283,9 +283,9 @@ export class TimerEngine extends Emitter {
     this._goto(index, { autoStart: wasActive && this.cfg().startAfterSkip });
   }
 
-  /** 「気が散った」を記録 */
-  interruption() {
-    this.st.interruptions++;
+  /** 「気が散った」を記録（n に負の数を渡すと取り消す） */
+  interruption(n = 1) {
+    this.st.interruptions = Math.max(0, this.st.interruptions + n);
     this._changed();
   }
 

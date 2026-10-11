@@ -166,6 +166,30 @@ export const DEFAULTS = {
     idlePauseMin: 0, // 0 = 無効
     mainOnTop: false,
   },
+  // 見守り：集中中に気が散る画面を開いていたら声をかける（Windows アプリ）
+  guard: {
+    enabled: true,
+    tone: 'coach', // gentle | coach | strict
+    graceSec: 20, // この秒数までは見逃す
+    speakSec: 60, // 2 回目の声かけ（読み上げ・前に出す）。0 = しない
+    askMin: 3, // 一時停止をたずねる。0 = しない
+    notify: true,
+    mini: true,
+    voice: true,
+    front: true,
+    praise: true,
+    sortPrompt: true, // 集中のあと、使った画面の仕分けをすすめる
+    groups: { video: true, sns: true, game: true, shop: true, chat: true, news: false },
+    rules: [], // { id, kind: 'title' | 'app', text, as: 'study' | 'distract' | 'neutral', task: タスクの id | null }
+  },
+  // スマホ連携（ntfy で知らせ合う）
+  phone: {
+    enabled: false,
+    server: 'https://ntfy.sh',
+    topic: '',
+    sendFocus: true, // 集中の始まりと終わりをスマホに知らせる
+    nudge: true, // スマホで気が散るアプリを開いたら、パソコンでも声をかける
+  },
   ui: { panelOpen: true, lastTab: 'timer', onboarded: false },
 };
 

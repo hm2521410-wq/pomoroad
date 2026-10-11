@@ -19,6 +19,7 @@ const {
 } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
+const { ForegroundWatcher } = require('./watcher');
 
 const APP_ID = 'com.hm.pomoroad';
 const SRC = path.join(__dirname, '..', 'src');
@@ -58,6 +59,8 @@ let lastState = null;
 let sys = { closeToTray: true, mainOnTop: false, openAtLogin: false };
 let miniOpts = { layout: 'bar', scale: 1, opacity: 100, onTop: true, autoOnMinimize: true, hideWhenMainFocused: false, size: [300, 64] };
 let miniWanted = false;
+let miniFlashed = false;
+const watcher = new ForegroundWatcher();
 
 // ── ウィンドウの位置の保存 ─────────────────────────
 const statePath = () => path.join(app.getPath('userData'), 'window-state.json');
@@ -164,7 +167,7 @@ function createMain() {
     if (!quitting && sys.closeToTray) {
       e.preventDefault();
       mainWin.hide();
-      if (miniOpts.autoOnMinimize && lastState?.running) showMini(true);
+      if (miniOpts.autoOnMinimize && lastState?.running) showMini(true, { user: true });
       if (!winState.trayHintShown && Notification.isSupported()) {
         // 初めてしまったときだけ、終了していないことを知らせる
         winState.trayHintShown = true;
@@ -177,7 +180,7 @@ function createMain() {
     mainWin = null;
   });
   mainWin.on('minimize', () => {
-    if (miniOpts.autoOnMinimize) showMini(true);
+    if (miniOpts.autoOnMinimize) showMini(true, { user: true });
   });
   mainWin.on('focus', () => {
     if (miniOpts.hideWhenMainFocused && miniWin?.isVisible()) miniWin.hide();
@@ -266,7 +269,8 @@ function applyMiniOptions() {
   miniWin.webContents.setZoomFactor(miniOpts.scale || 1);
 }
 
-function showMini(on) {
+function showMini(on, { user = false } = {}) {
+  if (user) miniFlashed = false;
   miniWanted = on;
   if (on) {
     if (!miniWin) createMini();
@@ -305,7 +309,7 @@ function updateTrayMenu() {
       { label: '今すぐ休憩', click: () => sendCmd('breakNow') },
       { label: '環境音の再生 / 停止', click: () => sendCmd('sound') },
       { type: 'separator' },
-      { label: 'ミニ表示', type: 'checkbox', checked: !!(miniWin && miniWanted), click: () => showMini(!(miniWin && miniWanted)) },
+      { label: 'ミニ表示', type: 'checkbox', checked: !!(miniWin && miniWanted), click: () => showMini(!(miniWin && miniWanted), { user: true }) },
       { label: 'メイン画面を開く', click: showMain },
       { type: 'separator' },
       { label: '終了', click: () => { quitting = true; app.quit(); } },
@@ -330,7 +334,7 @@ function registerIpc() {
   ipcMain.handle('getState', () => lastState);
   ipcMain.on('cmd', (_e, c) => {
     if (c?.type === 'openMain') showMain();
-    else if (c?.type === 'closeMini') showMini(false);
+    else if (c?.type === 'closeMini') showMini(false, { user: true });
     else mainWin?.webContents.send('cmd', c);
   });
   ipcMain.on('tray', (_e, { icons }) => {
@@ -340,10 +344,21 @@ function registerIpc() {
     img.addRepresentation({ scaleFactor: 2, dataURL: icons.x2 });
     tray.setImage(img);
   });
-  ipcMain.on('mini:toggle', (_e, on) => showMini(typeof on === 'boolean' ? on : !(miniWin && miniWanted && miniWin.isVisible())));
+  ipcMain.on('mini:toggle', (_e, on) => showMini(typeof on === 'boolean' ? on : !(miniWin && miniWanted && miniWin.isVisible()), { user: true }));
   ipcMain.on('mini:collapse', () => {
-    showMini(true);
+    showMini(true, { user: true });
     mainWin?.minimize();
+  });
+  // 見守りの声かけのあいだだけミニ表示を出す（もともと出ていなければ、終わったら隠す）
+  ipcMain.on('mini:flash', (_e, on) => {
+    if (on) {
+      if (miniWin && miniWanted && miniWin.isVisible()) return;
+      miniFlashed = true;
+      showMini(true);
+    } else if (miniFlashed) {
+      miniFlashed = false;
+      showMini(false);
+    }
   });
   ipcMain.on('mini:options', (_e, o) => {
     miniOpts = { ...miniOpts, ...o };
@@ -385,6 +400,14 @@ function registerIpc() {
     if (app.isPackaged) app.setLoginItemSettings({ openAtLogin: !!sys.openAtLogin, args: ['--hidden'] });
   });
   ipcMain.handle('idleTime', () => powerMonitor.getSystemIdleTime());
+  // 見守り：前に出ている画面（アプリ名と題名だけ）
+  ipcMain.handle('fg:sample', async () => {
+    const s = await watcher.sample();
+    if (s && s.pid && s.pid === process.pid) s.self = true;
+    return s;
+  });
+  ipcMain.handle('fg:status', () => watcher.status());
+  ipcMain.on('fg:stop', () => watcher.stop());
   ipcMain.on('showMain', showMain);
   ipcMain.on('quit', () => {
     quitting = true;
@@ -399,7 +422,7 @@ function registerShortcuts(map) {
   const actions = {
     toggle: () => sendCmd('toggle'),
     skip: () => sendCmd('skip'),
-    mini: () => showMini(!(miniWin && miniWanted && miniWin.isVisible())),
+    mini: () => showMini(!(miniWin && miniWanted && miniWin.isVisible()), { user: true }),
     show: () => {
       if (mainWin?.isVisible() && mainWin.isFocused()) mainWin.hide();
       else showMain();
@@ -436,7 +459,10 @@ if (!app.requestSingleInstanceLock()) {
   app.on('before-quit', () => {
     quitting = true;
   });
-  app.on('will-quit', () => globalShortcut.unregisterAll());
+  app.on('will-quit', () => {
+    globalShortcut.unregisterAll();
+    watcher.stop();
+  });
   app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit();
   });

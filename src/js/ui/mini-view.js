@@ -102,8 +102,13 @@ export class MiniView {
     r.classList.toggle('running', !!s.running);
     r.classList.toggle('overtime', !!s.overtime);
     this.timeEl.textContent = s.time;
-    this.labelEl.textContent = s.label;
-    this.taskEl.textContent = s.showTask && s.task ? s.task : s.sub || '';
+    // 見守りの声かけ中は、ラベルとタスクの代わりに声かけを出す
+    const a = s.alert;
+    r.classList.toggle('alert', !!a);
+    r.dataset.alert = a?.kind ?? '';
+    r.title = a ? a.text : '';
+    this.labelEl.textContent = a ? a.title : s.label;
+    this.taskEl.textContent = a ? a.text : s.showTask && s.task ? s.task : s.sub || '';
     this.taskEl.style.display = this.taskEl.textContent ? '' : 'none';
     if (this.barEl) this.barEl.style.setProperty('--p', `${(s.progress * 100).toFixed(2)}%`);
     if (this.arc) {

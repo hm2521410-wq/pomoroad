@@ -18,6 +18,7 @@ import { openMenu, closeMenu, toast, confirmDialog, stepper, tipOn } from './ui/
 import { renderSettings, SETTINGS_TABS } from './ui/settings-view.js';
 import { renderSounds } from './ui/sound-view.js';
 import { renderStats } from './ui/stats-view.js';
+import { GuardController } from './focus-guard.js';
 
 class App {
   constructor() {
@@ -34,6 +35,7 @@ class App {
     this.sound.variation = this.settings.sound.variation;
     this.sound.setCustomList(this.data.customSounds);
     this.alerts = new AlertSounds();
+    this.guard = new GuardController(this);
     this.soundOverride = null;
     this.manualPlaying = false;
     this.previewMix = null;
@@ -79,6 +81,7 @@ class App {
       this.data.flush();
     });
     if (this.desktop) this._initDesktop();
+    this.guard.start();
     setInterval(() => {
       this.side.renderToday();
       this.side.renderTimeline();
@@ -140,8 +143,12 @@ class App {
       this.syncSound();
       this._sendState(true);
     });
-    e.on('record', (rec) => this.data.addRecord(rec));
-    e.on('stepstart', () => {
+    e.on('record', (rec) => {
+      this.guard.attach(rec);
+      this.data.addRecord(rec);
+    });
+    e.on('stepstart', ({ step }) => {
+      if (step.type === 'focus') this.guard.reset();
       this.warned = false;
       this.soundOverride = null;
       this.previewMix = null;
@@ -706,6 +713,7 @@ class App {
 
   closeDrawer() {
     this.drawer = null;
+    this.guard.preview = false;
     document.body.classList.remove('drawer-open');
     for (const b of document.querySelectorAll('.tool')) b.classList.remove('active');
   }
@@ -715,6 +723,7 @@ class App {
     const tabs = clear($('#drawer-tabs'));
     const title = $('#drawer-title');
     const scroll = body.scrollTop;
+    this.guard.preview = this.drawer === 'settings' && this.drawerTab === 'guard';
     if (this.drawer === 'sounds') {
       title.textContent = 'ホワイトノイズ・環境音';
       tabs.style.display = 'none';
@@ -815,6 +824,7 @@ class App {
       running: snap.status === 'running',
       overtime: snap.overtime,
       task: this.data.currentTask?.title ?? '',
+      alert: this.guard.miniAlert(),
       showTask: m.showTask,
       controls: m.controls,
       glass: m.glass,

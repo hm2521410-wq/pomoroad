@@ -20,6 +20,13 @@ contextBridge.exposeInMainWorld('desktop', {
     toggle: (on) => ipcRenderer.send('mini:toggle', on),
     collapse: () => ipcRenderer.send('mini:collapse'),
     setOptions: (o) => ipcRenderer.send('mini:options', o),
+    flash: (on) => ipcRenderer.send('mini:flash', !!on),
+  },
+  // 見守り：前に出ている画面のアプリ名と題名（画面の中身は見ない）
+  foreground: {
+    sample: () => ipcRenderer.invoke('fg:sample'),
+    status: () => ipcRenderer.invoke('fg:status'),
+    stop: () => ipcRenderer.send('fg:stop'),
   },
   setTray: (o) => ipcRenderer.send('tray', o),
   notify: (o) => ipcRenderer.send('notify', o),

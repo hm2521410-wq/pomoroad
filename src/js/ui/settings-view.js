@@ -9,10 +9,12 @@ import { BACKGROUNDS, EFFECTS } from './background.js';
 import { DEFAULTS } from '../core/store.js';
 import { putFile, deleteFile } from '../core/idb.js';
 import { fmtDuration } from '../core/util.js';
+import { guardTab } from './guard-view.js';
 
 export const SETTINGS_TABS = [
   ['timer', 'タイマー', 'hourglass'],
   ['alerts', '通知・音', 'bell'],
+  ['guard', '見守り', 'eye'],
   ['view', '表示', 'palette'],
   ['mini', 'ミニ表示', 'pip'],
   ['keys', 'ショートカット', 'keyboard'],
@@ -27,7 +29,7 @@ export function renderSettings(body, tab, app) {
   const s = app.settings;
   const set = (path, v, opts) => app.set(path, v, opts);
   const rerender = () => renderSettings(body, tab, app);
-  const fn = { timer: timerTab, alerts: alertsTab, view: viewTab, mini: miniTab, keys: keysTab, system: systemTab, data: dataTab }[tab] ?? timerTab;
+  const fn = { timer: timerTab, alerts: alertsTab, guard: guardTab, view: viewTab, mini: miniTab, keys: keysTab, system: systemTab, data: dataTab }[tab] ?? timerTab;
   fn(body, s, set, app, rerender);
 }
 

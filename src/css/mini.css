@@ -218,3 +218,44 @@ body.mini-host {
   width: 24px;
   height: 24px;
 }
+
+/* 見守りの声かけ */
+.mini.alert {
+  border-color: rgba(255, 184, 77, 0.95);
+  animation: mini-pulse 1.8s ease-in-out infinite;
+}
+.mini.alert[data-alert='back'] {
+  border-color: rgba(51, 196, 141, 0.95);
+  animation: none;
+}
+@keyframes mini-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 2px rgba(255, 184, 77, 0.45), 0 6px 22px rgba(0, 0, 0, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(255, 184, 77, 0.12), 0 6px 22px rgba(0, 0, 0, 0.35);
+  }
+}
+.mini.alert .mlabel {
+  color: #ffb84d;
+  opacity: 1;
+  font-weight: 600;
+}
+.mini.alert[data-alert='back'] .mlabel {
+  color: #33c48d;
+}
+.mini.alert .mtask {
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.3;
+  opacity: 0.92;
+}
+.mini.alert[data-layout='bar'] .mtime {
+  font-size: 22px;
+}
+.mini.alert[data-layout='circle'] .mtask {
+  display: none;
+}

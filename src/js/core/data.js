@@ -239,7 +239,7 @@ export class DataStore extends Emitter {
 
   toCSV() {
     const esc = (s) => `"${String(s ?? '').replace(/"/g, '""')}"`;
-    const lines = [['日付', '開始', '終了', '種類', '実働(分)', '予定(分)', 'ポモドーロ', 'タスク', '気が散った回数'].join(',')];
+    const lines = [['日付', '開始', '終了', '種類', '実働(分)', '予定(分)', 'ポモドーロ', 'タスク', '気が散った回数', '寄り道(分)', 'スマホ(回)'].join(',')];
     const label = { focus: '集中', short: '短い休憩', long: '長い休憩' };
     for (const r of [...this.records].sort((a, b) => a.start - b.start)) {
       const task = r.taskId ? this.tasks.find((t) => t.id === r.taskId)?.title ?? '' : '';
@@ -247,7 +247,10 @@ export class DataStore extends Emitter {
       const e = new Date(r.end);
       const t = (x) => `${String(x.getHours()).padStart(2, '0')}:${String(x.getMinutes()).padStart(2, '0')}`;
       lines.push(
-        [this.keyOf(r.start), t(d), t(e), label[r.type] ?? r.type, (r.ms / 60000).toFixed(1), (r.planned / 60000).toFixed(1), r.counted ? 1 : 0, esc(task), r.interruptions || 0].join(','),
+        [
+          this.keyOf(r.start), t(d), t(e), label[r.type] ?? r.type, (r.ms / 60000).toFixed(1), (r.planned / 60000).toFixed(1), r.counted ? 1 : 0, esc(task), r.interruptions || 0,
+          r.guard ? (r.guard.distractMs / 60000).toFixed(1) : '', r.guard ? r.guard.phone?.length ?? 0 : '',
+        ].join(','),
       );
     }
     return '﻿' + lines.join('\r\n');

@@ -4,6 +4,7 @@ import { h, clear } from './dom.js';
 import { icon } from './icons.js';
 import { segmented, showTip, hideTip, confirmDialog } from './widgets.js';
 import { fmtDuration, fmtTime, addDays } from '../core/util.js';
+import { guardStats } from './guard-view.js';
 
 const NS = 'http://www.w3.org/2000/svg';
 const svg = (tag, attrs = {}) => {
@@ -37,6 +38,10 @@ export function renderStats(body, app) {
       tileEl('これまでの合計', fmtDuration(tot.focusMs), `ポモドーロ ${tot.pomos} 回`),
     ),
   );
+
+  // 見守り（記録があるときだけ）
+  const guard = guardStats(app);
+  if (guard) body.append(guard);
 
   // 日ごとの棒グラフ
   const days = data.days(range);

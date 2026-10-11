@@ -1729,3 +1729,254 @@ body.focus-mode #fs-clock {
 a.btn {
   text-decoration: none;
 }
+
+/* ── 見守り ───────────────────────────── */
+#guard-card {
+  display: none;
+  position: absolute;
+  top: 64px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  width: min(460px, calc(100% - 32px));
+  background: var(--card-solid);
+  border: 1px solid rgba(255, 184, 77, 0.8);
+  border-radius: 16px;
+  box-shadow: var(--shadow), 0 0 0 3px rgba(255, 184, 77, 0.18);
+  padding: 14px 16px 16px;
+  animation: pop 0.18s ease-out;
+}
+#guard-card.show {
+  display: block;
+}
+#guard-card.k-back {
+  border-color: rgba(51, 196, 141, 0.85);
+  box-shadow: var(--shadow), 0 0 0 3px rgba(51, 196, 141, 0.18);
+}
+#guard-card.k-ask {
+  border-color: rgba(255, 120, 90, 0.9);
+}
+.gc-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #ffb84d;
+}
+#guard-card.k-back .gc-head {
+  color: #33c48d;
+}
+.gc-head b {
+  color: var(--text);
+  font-size: 15px;
+}
+.gc-head .spacer {
+  flex: 1;
+}
+.gc-head .icon-btn {
+  width: 28px;
+  height: 28px;
+}
+.gc-body {
+  margin: 8px 0 4px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.gc-where {
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#guard-card .btn-row {
+  flex-wrap: wrap;
+}
+body.focus-mode #guard-card {
+  top: 90px;
+}
+
+.cls-badge {
+  flex: none;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: var(--chip);
+  color: var(--text-2);
+  white-space: nowrap;
+}
+.cls-badge.c-study,
+.cls-badge.c-self {
+  background: rgba(51, 196, 141, 0.18);
+  color: #33c48d;
+}
+.cls-badge.c-distract {
+  background: rgba(255, 120, 90, 0.18);
+  color: #ff7a5a;
+}
+.guard-live {
+  background: var(--chip);
+  border-radius: 12px;
+  padding: 12px;
+}
+.guard-live .hint {
+  margin: 0 !important;
+}
+.gl-main {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+.gl-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.gl-title {
+  font-size: 13px;
+  color: var(--text-2);
+  overflow-wrap: anywhere;
+}
+.gl-text small,
+.sr-text small {
+  color: var(--muted);
+  font-size: 11px;
+}
+.rule-list,
+.screen-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.rule {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 6px 6px 10px;
+  border-radius: 10px;
+  background: var(--chip);
+}
+.rule-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rule-task {
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.rule .icon-btn {
+  width: 28px;
+  height: 28px;
+}
+.screen-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line);
+}
+.sr-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.sr-text b {
+  font-weight: 500;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.screen-row .seg button {
+  padding: 0 8px;
+  font-size: 11px;
+}
+.section .hint.warn {
+  color: #ff9a6a;
+}
+.modal.learn {
+  width: min(480px, calc(100vw - 32px));
+}
+.learn-screen {
+  font-size: 13px;
+  background: var(--chip);
+  border-radius: 10px;
+  padding: 8px 10px;
+  overflow-wrap: anywhere;
+}
+.learn-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  font-size: 13px;
+}
+.learn-kind {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.learn-opt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.learn-sub {
+  flex-basis: 100%;
+  padding-left: 24px;
+}
+.learn-sub input.txt {
+  margin-bottom: 8px !important;
+}
+.learn-opt small.hint {
+  flex-basis: 100%;
+  padding-left: 24px;
+  color: var(--muted);
+}
+.learn-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.learn-chips .chip-btn {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.learn-task {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+.guard-top {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.guard-top small {
+  color: var(--muted);
+}
+.gt-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  padding: 3px 0;
+  border-bottom: 1px solid var(--line);
+}

@@ -9,6 +9,7 @@
 const { spawn } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
+const { Buffer } = require('node:buffer');
 
 // 注意：PowerShell では $pid が予約済みの変数なので、プロセス番号は $procId に入れる（tests/watcher.test.mjs で確かめている）
 const PS_SCRIPT = String.raw`
