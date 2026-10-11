@@ -337,6 +337,8 @@ function checkBox(ctl) {
   );
 }
 
+const VOICES_URL = 'https://github.com/hm2521410-wq/pomoroad/tree/claude/epic-euler-sl2knt/docs/phone-voices';
+
 const STATUS_TEXT = { off: '止まっています', connecting: 'つないでいます…', connected: 'つながっています', error: 'つながっていません' };
 
 function phoneSection(app, rerender) {
@@ -410,7 +412,9 @@ function setupGuide(app) {
       step('7', 'MacroDroid でマクロ「Pomoroad 集中開始」を作ります。トリガー：「通知」→「通知を受信」、アプリは ntfy、文字に「集中開始」を含む。アクション：「音量」→「優先モード/通知のミュート」→「優先通知のみ許可」（電話も止めたいなら「全通知をブロック」）、続けて変数 pomoroad_focus をオン（true）。',
         h('small', null, 'MacroDroid には「おやすみモード」という名前のアクションはなく、「優先モード/通知のミュート」（英語表示では Priority Mode / Do Not Disturb）がそれに当たります。見つからないときは、アクションを追加する画面の虫めがねで「優先」や「Priority」と検索してください。初めて使うときに「サイレントモードへのアクセス（Do Not Disturb access）」の許可を求められるので、MacroDroid を許可します。Android 15 以降では、MacroDroid 専用のモード（MacroDroid Do Not Disturb）が使われます。')),
       step('8', 'マクロ「Pomoroad 集中終了」を作ります。トリガー：同じく「集中終了」を含む。アクション：「音量」→「優先モード/通知のミュート」→「全通知を許可」、pomoroad_focus をオフ（false）。'),
-      step('9', '手順 2 のマクロに、制約「変数 pomoroad_focus がオン」を足し、HTTP リクエストのあとに「ホーム画面を表示」と「読み上げ：今は集中の時間です」を足します。'),
+      step('9', '手順 2 のマクロに、制約「変数 pomoroad_focus がオン」を足し、HTTP リクエストのあとに「ホーム画面を表示」と、声かけの音声を足します。',
+        h('small', null, '声かけは、「読み上げ」（スマホの機械的な声）より、自然な声で作った音声ファイルがおすすめです。下のページで声を聞き比べて（各フォルダの sample.mp3）、気に入った声の 1.mp3〜4.mp3 をスマホに保存し、アクション「メディア」→「サウンドを再生/停止」でそのファイルを選びます。音を出す先は「メディア」か「アラーム」にしてください（集中中は優先モードで「通知」の音が止まるため）。'),
+        h('div', { class: 'btn-row', style: { marginTop: '6px' } }, h('a', { class: 'btn', href: VOICES_URL, target: '_blank', rel: 'noopener' }, icon('open', 15), '声かけの音声（8 種類の声）'))),
     ),
     h('p', { class: 'hint' }, '無料版の MacroDroid はマクロが 5 つまでです。足りないときは 7 と 8 を 1 つにまとめられます（トリガーを 2 つにして「もし〜なら」で分ける）。時計を見るためにスマホを点けるだけなら数えません。'),
   );
