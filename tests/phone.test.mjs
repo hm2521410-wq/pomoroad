@@ -40,7 +40,7 @@ test('ntfy：集中の知らせを送り、スマホからの知らせを受け�
   try {
     link.configure({ enabled: true, server: `${mock.url}/`, topic: TOPIC });
     assert.ok(await until(() => mock.subscribers(`${TOPIC}-pc`) === 1), 'スマホ → パソコンのトピックを受信している');
-    assert.equal(link.status().state, 'connected');
+    assert.ok(await until(() => link.status().state === 'connected'), 'つながった状態になる');
 
     // パソコン → スマホ
     assert.equal(await link.publish({ message: '集中開始：あと25分', tags: ['tomato'] }), true);
