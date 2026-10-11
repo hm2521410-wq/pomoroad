@@ -17,7 +17,7 @@
 > 署名をしていないので、初回は「Windows によって PC が保護されました」と出ます。
 > 「**詳細情報**」→「**実行**」で起動できます。
 >
-> Releases にまだ無い最新の変更は、**Actions** タブ →「Build Windows app」→ 一番上の実行 → **Artifacts** の `Pomoroad-Windows` から取り出せます。
+> バージョンを上げた変更は自動で Releases に載ります。それ以外の最新の変更は、**Actions** タブ →「Build Windows app」→ 一番上の実行 → **Artifacts** の `Pomoroad-Windows` から取り出せます。
 
 ### アップデートのしかた
 
