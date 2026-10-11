@@ -1,0 +1,11 @@
+{
+  "name": "Pomoroad",
+  "short_name": "Pomoroad",
+  "description": "カスタム性の高いポモドーロタイマー（環境音つき）",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0e1014",
+  "theme_color": "#16181d",
+  "lang": "ja",
+  "icons": [{ "src": "assets/icon.png", "sizes": "256x256", "type": "image/png" }]
+}

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ja" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob: data:; worker-src 'self' blob:; connect-src 'self' blob: data:"
+    />
+    <title>Pomoroad</title>
+    <link rel="icon" href="assets/icon.png" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="stylesheet" href="css/app.css" />
+    <script type="module" src="js/app.js"></script>
+  </head>
+  <body class="status-ready">
+    <div id="bg"></div>
+    <canvas id="fx"></canvas>
+    <div id="dim"></div>
+
+    <header id="titlebar">
+      <div class="brand"><img src="assets/icon.png" alt="" />Pomoroad</div>
+      <div class="tb-status" id="tb-status"></div>
+    </header>
+
+    <main id="app">
+      <section id="stage">
+        <div class="stage-top">
+          <div class="left-tools" id="left-tools"></div>
+          <button id="task-pill" type="button"></button>
+          <div class="right-tools" id="right-tools"></div>
+        </div>
+        <div id="fs-clock"></div>
+        <div id="timer-wrap">
+          <div id="ring"></div>
+          <div id="time-block">
+            <div id="phase-label"></div>
+            <div id="time">25:00</div>
+            <div id="sub-label"></div>
+          </div>
+        </div>
+        <div id="road"></div>
+        <div id="controls"></div>
+        <div id="quick-actions"></div>
+        <nav id="toolbar"></nav>
+      </section>
+      <aside id="side"></aside>
+    </main>
+    <button id="side-toggle" type="button" title="パネルの表示/非表示"></button>
+
+    <div id="drawer-backdrop"></div>
+    <div id="drawer" role="dialog" aria-modal="true">
+      <div class="drawer-head"><h2 id="drawer-title"></h2><button class="icon-btn" id="drawer-close" title="閉じる (Esc)"></button></div>
+      <div class="tabs" id="drawer-tabs"></div>
+      <div class="drawer-body" id="drawer-body"></div>
+    </div>
+    <div id="toasts"></div>
+    <div class="tooltip" id="tooltip"></div>
+  </body>
+</html>

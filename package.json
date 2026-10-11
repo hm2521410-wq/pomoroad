@@ -1,0 +1,74 @@
+{
+  "name": "pomoroad",
+  "productName": "Pomoroad",
+  "version": "1.0.0",
+  "description": "カスタム性の高いポモドーロタイマー（Windows向け・環境音つき）",
+  "main": "electron/main.js",
+  "author": "HM",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "web": "npx --yes http-server src -p 5173 -c-1",
+    "test": "node --test \"tests/*.test.mjs\"",
+    "sounds": "node scripts/render-sounds.mjs scratch/sounds",
+    "dist": "electron-builder --win --x64 --publish never"
+  },
+  "devDependencies": {
+    "electron": "^44.6.0",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "com.hm.pomoroad",
+    "productName": "Pomoroad",
+    "copyright": "Copyright © 2026 HM",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "electron/**/*",
+      "src/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Pomoroad",
+      "installerLanguages": [
+        "ja_JP"
+      ],
+      "language": "1041",
+      "artifactName": "Pomoroad-Setup-${version}.${ext}"
+    },
+    "portable": {
+      "artifactName": "Pomoroad-${version}-portable.${ext}"
+    },
+    "linux": {
+      "target": [
+        "dir"
+      ],
+      "icon": "build/icon.png"
+    }
+  }
+}

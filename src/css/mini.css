@@ -1,0 +1,220 @@
+/* ミニ表示 */
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: transparent;
+  overflow: hidden;
+  font-family: 'Segoe UI Variable Text', 'Segoe UI', 'Yu Gothic UI', system-ui, sans-serif;
+  user-select: none;
+}
+body.mini-host {
+  padding: 4px;
+  box-sizing: border-box;
+}
+.mini {
+  --mc: #ff5a5f;
+  --glass: 0.7;
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  color: #f1f3f7;
+  background: rgba(18, 20, 26, var(--glass));
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  overflow: hidden;
+  -webkit-app-region: drag;
+  app-region: drag;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.35);
+}
+.mini[data-theme='light'] {
+  color: #1d2129;
+  background: rgba(255, 255, 255, var(--glass));
+  border-color: rgba(0, 0, 0, 0.1);
+}
+.mini button {
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+}
+.mtime {
+  font-family: 'Segoe UI Variable Display', 'Segoe UI', system-ui, sans-serif;
+  font-weight: 300;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+  line-height: 1;
+}
+.mini.overtime .mtime {
+  color: var(--mc);
+}
+.mlabel {
+  font-size: 11px;
+  opacity: 0.75;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+.mtask {
+  font-size: 11px;
+  opacity: 0.6;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mbtns {
+  display: flex;
+  gap: 2px;
+  transition: opacity 0.15s;
+}
+.mini[data-controls='hover'] .mbtns {
+  opacity: 0;
+}
+.mini[data-controls='hover']:hover .mbtns {
+  opacity: 1;
+}
+.mini[data-controls='never'] .mbtns {
+  display: none;
+}
+.mbtn {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 0;
+  background: rgba(255, 255, 255, 0.08);
+  color: inherit;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  padding: 0;
+}
+.mini[data-theme='light'] .mbtn {
+  background: rgba(0, 0, 0, 0.06);
+}
+.mbtn:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+.mbtn[data-cmd='closeMini']:hover {
+  background: rgba(255, 90, 95, 0.5);
+}
+.mbar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.08);
+}
+.mbar::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: var(--p, 0%);
+  background: var(--mc);
+  transition: width 0.5s linear;
+}
+
+/* 横長 */
+.mini[data-layout='bar'] {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 10px 0 14px;
+}
+.mini[data-layout='bar'] .mdot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--mc);
+  box-shadow: 0 0 8px var(--mc);
+  flex: none;
+}
+.mini[data-layout='bar']:not(.running) .mdot {
+  box-shadow: none;
+  opacity: 0.6;
+}
+.mini[data-layout='bar'] .mtime {
+  font-size: 30px;
+}
+.mini[data-layout='bar'] .minfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.mini[data-layout='bar'][data-controls='hover']:hover .minfo {
+  display: none;
+}
+.mini[data-layout='bar'][data-controls='hover'] .mbtns {
+  position: absolute;
+  right: 10px;
+}
+.mini[data-layout='bar'][data-controls='hover']:not(:hover) .mbtns {
+  pointer-events: none;
+}
+
+/* 円 */
+.mini[data-layout='circle'] {
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+}
+.mring {
+  position: absolute;
+  inset: 6px;
+  width: calc(100% - 12px);
+  height: calc(100% - 12px);
+}
+.mring-bg {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.12);
+  stroke-width: 5;
+}
+.mring-arc {
+  fill: none;
+  stroke: var(--mc);
+  stroke-width: 5;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.5s linear;
+}
+.mcenter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.mini[data-layout='circle'] .mtime {
+  font-size: 28px;
+}
+.mini[data-layout='circle'] .mbtns {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.mini[data-layout='circle'] .mbtn[data-cmd='openMain'],
+.mini[data-layout='circle'] .mbtn[data-cmd='closeMini'] {
+  display: none;
+}
+.mini[data-layout='circle'][data-controls='hover']:hover .mcenter .mlabel {
+  visibility: hidden;
+}
+
+/* 文字だけ */
+.mini[data-layout='text'] {
+  display: grid;
+  place-items: center;
+}
+.mini[data-layout='text'] .mtime {
+  font-size: 40px;
+}
+.mini[data-layout='text'] .mbtns {
+  position: absolute;
+  right: 6px;
+  top: 6px;
+}
+.mini[data-layout='text'] .mbtn {
+  width: 24px;
+  height: 24px;
+}
